@@ -4,6 +4,12 @@
 #include <GLFW/glfw3.h>
 
 #include <string>
+#include <TextureLoader.h>
+
+#include <test_unit.h>
+
+
+
 int main()
 {
 	GLFWwindow* window = nullptr;
@@ -25,7 +31,7 @@ int main()
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		return -1;
 	}
-
+	TestUnit::runAll();
 	//运行
 	while (!glfwWindowShouldClose(window))
 	{

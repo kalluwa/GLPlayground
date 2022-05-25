@@ -67,6 +67,15 @@ public:
 
 	void createScreenQuad(MeshData& meshData, float k, glm::vec2 offset);
 
+	//下面是自定义的方法
+	
+	/// <summary>
+	/// 文件中读取模型数据
+	/// </summary>
+	/// <param name="file_path"></param>
+	/// <param name="mesh_data"></param>
+	bool loadFromFile(const std::string& file_path,MeshData& mesh_data);
+
 private:
 	void subdivide(MeshData& meshData);
 	void buildCylinderTopCap(float bottomRadius, float topRadius, float height, unsigned int sliceCount, unsigned int stackCount, MeshData& meshData);

@@ -2,6 +2,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <pystring.h>
+#include <fmt/core.h>
 
 float AngleFromXY(float x, float y)
 {
@@ -25,6 +27,22 @@ float AngleFromXY(float x, float y)
 	return theta;
 }
 
+glm::vec3 tangentFromNormal(glm::vec3 normal)
+{
+	glm::vec3 tangent;
+	glm::vec3 t1 = glm::cross(normal, glm::vec3(0,0,1));
+	glm::vec3 t2 = glm::cross(normal, glm::vec3(0,1,0));
+	if (glm::length(t1)> glm::length(t2))
+	{
+		tangent = t1;
+	}
+	else
+	{
+		tangent = t2;
+	}
+
+	return tangent;
+}
 
 void GeometryGenerator::createBox(float width, float height, float depth, MeshData& meshData)
 {
@@ -636,3 +654,94 @@ void GeometryGenerator::createScreenQuad(MeshData& meshData, float k, glm::vec2 
 	meshData.indices[4] = 2;
 	meshData.indices[5] = 3;
 }
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
+bool GeometryGenerator::loadFromFile(const std::string& file_path,MeshData& mesh_data)
+{
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+
+	std::string warn;
+	std::string err;
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, file_path.c_str());
+
+	//读取报错
+	if (!err.empty())fmt::print(err);
+	//读取失败
+	if(!ret) return false;
+
+	//初始化
+	mesh_data.vertices.clear();
+	mesh_data.indices.clear();
+
+	bool recalculate_normal = false;
+	// Loop over shapes
+	for (size_t s = 0; s < shapes.size(); s++) {
+		// Loop over faces(polygon)
+		size_t index_offset = 0;
+		for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+			size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+
+			// Loop over vertices in the face.
+			for (size_t v = 0; v < fv; v++) {
+				Vertex vertex;
+				// access to vertex
+				tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+
+				tinyobj::real_t vx = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
+				tinyobj::real_t vy = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
+				tinyobj::real_t vz = attrib.vertices[3 * size_t(idx.vertex_index) + 2];
+
+				vertex.position = glm::vec3(vx,vy,vz);
+				// Check if `normal_index` is zero or positive. negative = no normal data
+				if (idx.normal_index >= 0) {
+					tinyobj::real_t nx = attrib.normals[3 * size_t(idx.normal_index) + 0];
+					tinyobj::real_t ny = attrib.normals[3 * size_t(idx.normal_index) + 1];
+					tinyobj::real_t nz = attrib.normals[3 * size_t(idx.normal_index) + 2];
+
+					vertex.normal = glm::normalize(glm::vec3(nx,ny,nz));
+					vertex.tangent = tangentFromNormal(vertex.normal);
+				}
+				else
+				{
+					vertex.normal = glm::vec3(0,1,0);
+					vertex.tangent = glm::vec3(1,0,0);
+					recalculate_normal = true;
+				}
+
+				// Check if `texcoord_index` is zero or positive. negative = no texcoord data
+				if (idx.texcoord_index >= 0) {
+					tinyobj::real_t tx = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
+					tinyobj::real_t ty = attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
+
+					vertex.uv = glm::vec2(tx,ty);
+				}
+				else
+				{
+					vertex.uv = glm::vec2(0,0);
+				}
+				// Optional: vertex colors
+				// tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
+				// tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
+				// tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
+
+
+				mesh_data.vertices.emplace_back(vertex);
+
+			}
+			index_offset += fv;
+
+			// per-face material
+			shapes[s].mesh.material_ids[f];
+		}
+
+		for(unsigned int i=0;i<mesh_data.vertices.size();i++)
+		{
+			mesh_data.indices.emplace_back(i);
+		}
+	}
+
+	return true;
+};
