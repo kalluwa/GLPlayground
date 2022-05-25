@@ -6,6 +6,7 @@
 #include "RenderStruct.h"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
+#include <unordered_map>
 
 struct Vertex
 {

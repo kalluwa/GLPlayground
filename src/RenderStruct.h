@@ -172,6 +172,8 @@ struct Shader
 		};
 
 		set(getStr(vs_path),getStr(fs_path));
+
+		return program_id;
 	};
 	std::string vs_str;
 	std::string fs_str;
