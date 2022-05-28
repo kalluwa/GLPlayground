@@ -7,9 +7,14 @@ in vec2 uv;
 uniform mat4 view;
 uniform mat4 proj;
 
+out vec4 color;
+out vec3 worldpos;
+out vec3 worldnormal;
+
 void main()
 {
-	vec4 world_pos = view * vec4(position,1.0);
-
-	gl_Position = proj * world_pos;
+	color = vec4(abs(normal), 1.0);
+	worldnormal = normalize(normal);
+	worldpos = (view * vec4(position, 1)).xyz;
+	gl_Position = proj * view * vec4(position, 1);
 }

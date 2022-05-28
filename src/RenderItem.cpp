@@ -114,6 +114,8 @@ void RenderItem::render(Camera* camera)
 		glBindVertexArray(mesh->vertex_array);
 
 		glBindBuffer(GL_ARRAY_BUFFER, mesh->vertex_buffer);
+
+		//attributes
 		auto att_pos = glGetAttribLocation(shader->program_id, "position");
 		auto att_normal = glGetAttribLocation(shader->program_id, "normal");
 		auto att_uv = glGetAttribLocation(shader->program_id, "uv");
@@ -124,8 +126,11 @@ void RenderItem::render(Camera* camera)
 		glEnableVertexAttribArray(att_uv);
 		glVertexAttribPointer(att_uv, 3, GL_FLOAT, GL_FALSE, 12 + 12 + 8, (void*)24);
 
+		//uniforms
 		shader->setUniformMf("view",camera->getViewMatrix());
 		shader->setUniformMf("proj",camera->getProjectionMatrix());
+		shader->setUniformVf("cam_pos", camera->getPosition());
+		shader->setUniformVf("viewport_size", camera->getScreenSize());
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh->index_buffer);
 		for (auto& [name,geo] : mesh->drawing_args)

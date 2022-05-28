@@ -63,6 +63,11 @@ void GameApp::inputMouse(int x, int y, int mouse_button, int mouse_press_or_rele
 	m_camera->updateMouseState(x,y,mouse_button, mouse_press_or_release);
 }
 
+void GameApp::resize(int width,int height)
+{
+	m_camera->viewport(0,0,width,height);
+	glViewport(0,0,width,height);
+}
 void GameApp::inputKeyboard(int keycode, int action)
 {
 	static bool key_shift_ = false;

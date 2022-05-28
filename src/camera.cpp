@@ -91,7 +91,7 @@ void Camera::update() {
 		&position_[0], &target_[0], &up_[0],
 		&viewMatrix_[0][0],
 		1.0f / 60.0f,
-		0.1f, // zoom per tick
+		0.5f, // zoom per tick
 		0.3f + _zoom_ * 0.5, // pan speed
 		3.0f, // rotation multiplier
 		width_, height_, // screen (window) size

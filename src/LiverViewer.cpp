@@ -40,6 +40,11 @@ void mousebutton_callback (GLFWwindow *window, int button, int action, int mods)
 	game_app->inputMouse(mousx, mousy, button, GLFW_PRESS == action);
 
 }
+
+void window_size_callback(GLFWwindow* window, int width, int height)
+{
+	game_app->resize(width,height);
+}
 int main()
 {
 	GLFWwindow* window = nullptr;
@@ -67,6 +72,7 @@ int main()
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetMouseButtonCallback(window,mousebutton_callback);
+	glfwSetWindowSizeCallback(window, window_size_callback);
 	//初始化实例
 	game_app = std::make_unique<GameApp>(width,height);
 	TestUnit::runAll();
@@ -79,6 +85,8 @@ int main()
 
 	auto time_last = std::chrono::steady_clock::now();
 
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0,0,0,0);
 	//运行
 	while (!glfwWindowShouldClose(window))
 	{
@@ -91,7 +99,7 @@ int main()
 		game_app->update(elasped_second_time);
 
 		/* Render here */
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		game_app->draw();
 

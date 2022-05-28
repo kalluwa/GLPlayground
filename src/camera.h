@@ -57,7 +57,9 @@ public:
 	//!check box intersect
 	bool intersectBox(float mouseX,float mouseY,std::pair<glm::vec3,glm::vec3> aabbox);
 
-	glm::vec2 getScreenSize() { return glm::vec2(width_, height_); };
+	glm::vec2 getScreenSize() { 
+		return glm::vec2(width_, height_); 
+	};
 
 	void setView(const glm::mat4& newview){ viewMatrix_ = newview;}
 
