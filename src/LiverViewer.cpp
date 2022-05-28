@@ -12,6 +12,26 @@
 #include <fmt/core.h>
 #include <chrono>
 
+
+std::unique_ptr<GameApp> game_app = nullptr;
+
+int g_button = -1;
+int g_button_state=0;
+void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+{
+	game_app->inputMouse(xpos,ypos,g_button,g_button_state);
+};
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+	game_app->inputMouseScroll(yoffset);
+};
+
+void mousebutton_callback (GLFWwindow *window, int button, int action, int mods)
+{
+	g_button = button; 
+	g_button_state = action>0?1:0;
+}
 int main()
 {
 	GLFWwindow* window = nullptr;
@@ -29,7 +49,6 @@ int main()
 		return -1;
 	}
 
-	std::unique_ptr<GameApp> game_app = nullptr;
 	//绑定当前window
 	glfwMakeContextCurrent(window);
 
@@ -37,6 +56,9 @@ int main()
 		return -1;
 	}
 
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetMouseButtonCallback(window,mousebutton_callback);
 	//初始化实例
 	game_app = std::make_unique<GameApp>(width,height);
 	TestUnit::runAll();
@@ -59,6 +81,7 @@ int main()
 
 		//fmt::print("elasped time {} s\n",elasped_second_time);
 		game_app->update(elasped_second_time);
+
 		/* Render here */
 		glClear(GL_COLOR_BUFFER_BIT);
 

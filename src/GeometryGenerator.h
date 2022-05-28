@@ -35,6 +35,12 @@ public:
 		std::vector<unsigned int> indices;
 	};
 
+	/// <summary>
+	/// for debug
+	/// </summary>
+	/// <param name="meshData"></param>
+	void createTriangle(MeshData& meshData);
+
 	///<summary>
 	/// Creates a box centered at the origin with the given dimensions.
 	///</summary>

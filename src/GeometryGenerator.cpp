@@ -44,6 +44,20 @@ glm::vec3 tangentFromNormal(glm::vec3 normal)
 	return tangent;
 }
 
+void GeometryGenerator::createTriangle(MeshData& meshData)
+{
+	Vertex v[3];
+	v[0] = Vertex(0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0);
+	v[1] = Vertex(10, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0);
+	v[2] = Vertex(10, 0, 10, 0, 1, 0, 1, 0, 0, 0, 0);
+	meshData.vertices.clear();
+	meshData.vertices.assign(&v[0],&v[2]);
+
+	meshData.indices.clear();
+	meshData.indices.push_back(0);
+	meshData.indices.push_back(1);
+	meshData.indices.push_back(2);
+}
 void GeometryGenerator::createBox(float width, float height, float depth, MeshData& meshData)
 {
 	//
