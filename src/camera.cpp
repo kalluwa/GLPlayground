@@ -2,7 +2,7 @@
 #define ARCBALL_CAMERA_IMPLEMENTATION
 #include "arcball.h"
 #include "Camera.h"
-
+#include <fmt/core.h>
 #include <algorithm>
 
 //
@@ -48,12 +48,15 @@ void Camera::updateMouseState(int x,int y,int button, int state)
 	{
 	case 0:// GLFW_MOUSE_BUTTON_LEFT:
 		left_down_ = state;
+		//fmt::print("left :{}\n",state);
 		break;
-	case 1://GLFW_MOUSE_BUTTON_MIDDLE:
+	case 2://GLFW_MOUSE_BUTTON_MIDDLE:
 		middle_down_ = state;
+		//fmt::print("middle :{}\n", state);
 		break;
-	case 2://GLFW_MOUSE_BUTTON_RIGHT:
+	case 1://GLFW_MOUSE_BUTTON_RIGHT:
 		right_down_ = state;
+		//fmt::print("right :{}\n", state);
 		break;
 	}
 	cur_pos_ = { x,y };
@@ -61,6 +64,7 @@ void Camera::updateMouseState(int x,int y,int button, int state)
 	{
 		last_mousepos_ = cur_pos_;
 	}
+	//fmt::print("[{},{}]->[{},{}]\n",last_mousepos_.x,last_mousepos_.y,cur_pos_.x,cur_pos_.y);
 }
 void Camera::updateMouseDelta(float delta)
 {
@@ -80,21 +84,21 @@ void Camera::updateMouseDelta(float delta)
 
 void Camera::update() {
 
-	/*if (glm::distance(cur_pos_, last_mousepos_) < 0.01)
-		return;*/
-	
+	//if (glm::distance(cur_pos_, last_mousepos_) < 0.01)
+	//	return;
+	//
 	arcball_camera_update(
 		&position_[0], &target_[0], &up_[0],
 		&viewMatrix_[0][0],
 		1.0f / 60.0f,
 		0.1f, // zoom per tick
-		0.1f + _zoom_ * 0.1, // pan speed
+		0.3f + _zoom_ * 0.5, // pan speed
 		3.0f, // rotation multiplier
 		width_, height_, // screen (window) size
 		last_mousepos_.x, cur_pos_.x,
 		last_mousepos_.y, cur_pos_.y,
 		right_down_,
-		middle_down_,
+		left_down_,
 		mouse_delta_,
 		0);
 	//update mouse state

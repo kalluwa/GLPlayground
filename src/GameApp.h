@@ -30,6 +30,7 @@ public:
 	//!input keyboard
 	void inputKeyboard(int keycode, int action);
 
+	Camera* getCamera(){ return m_camera.get();}
 protected:
 	//读取初始的模型数据 纹理数据
 	virtual void loadContent();

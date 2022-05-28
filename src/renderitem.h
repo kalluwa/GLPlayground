@@ -12,14 +12,14 @@
 #include <GeometryGenerator.h>
 #include <camera.h>
 
-#pragma pack(push,1)
+//#pragma pack(push,1)
 struct Vertex
 {
 	glm::vec3 pos;
 	glm::vec3 normal;
 	glm::vec2 uv;
 };
-#pragma pack(pop)
+//#pragma pack(pop)
 
 struct SubmeshGeometry
 {

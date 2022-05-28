@@ -16,21 +16,29 @@
 std::unique_ptr<GameApp> game_app = nullptr;
 
 int g_button = -1;
-int g_button_state=0;
+bool g_button_down=false;
+double mousx,mousy;
+bool mouse_button_down =false;
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
-	game_app->inputMouse(xpos,ypos,g_button,g_button_state);
+	if(g_button_down)
+		game_app->inputMouse(xpos, ypos, -1, -1);
 };
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-	game_app->inputMouseScroll(yoffset);
+	game_app->inputMouseScroll(yoffset>0?120:-120);
 };
 
 void mousebutton_callback (GLFWwindow *window, int button, int action, int mods)
 {
-	g_button = button; 
-	g_button_state = action>0?1:0;
+	g_button = button;
+	g_button_down = GLFW_PRESS == action;
+
+
+	glfwGetCursorPos(window, &mousx, &mousy);
+	game_app->inputMouse(mousx, mousy, button, GLFW_PRESS == action);
+
 }
 int main()
 {
