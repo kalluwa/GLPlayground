@@ -18,8 +18,8 @@ GameApp::~GameApp()
 
 bool GameApp::init()
 {
-	m_camera = std::make_unique<Camera>(glm::vec3(10,10,10),
-		glm::vec3(0),
+	m_camera = std::make_unique<Camera>(glm::vec3(-10.896174,7.108711,-38.775303),
+		glm::vec3(-0.8545703,-4.8266044,-12.192807),
 		glm::vec3(0,1,0),
 		45.0f,
 		m_viewport.x/(float)(m_viewport.y),
@@ -39,6 +39,9 @@ void GameApp::update(float delta_time)
 
 void GameApp::draw()
 {
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	for(auto& render_item : m_gameObjects)
 	{
 		render_item->render(m_camera.get());
@@ -61,10 +64,15 @@ void GameApp::inputMouseScroll(int x)
 void GameApp::inputMouse(int x, int y, int mouse_button, int mouse_press_or_release)
 {
 	m_camera->updateMouseState(x,y,mouse_button, mouse_press_or_release);
+
+	auto pos = m_camera->getPosition();
+	auto target = m_camera->getTarget();
+	fmt::print("cam pos:{},{},{}\n cam target:{},{},{}\n",pos.x,pos.y,pos.z,target.x,target.y,target.z);
 }
 
 void GameApp::resize(int width,int height)
 {
+	m_viewport = glm::vec2(width,height);
 	m_camera->viewport(0,0,width,height);
 	glViewport(0,0,width,height);
 }
