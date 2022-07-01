@@ -4,6 +4,7 @@
 
 #include <RenderItem.h>
 #include <camera.h>
+#include <GBuffer.h>
 
 
 class GameApp
@@ -20,7 +21,7 @@ public:
 	//绘制
 	virtual void draw();
 
-	virtual void drawGeometry();
+	virtual void drawGBuffer();
 
 	//!input mouse
 	void inputMouse(int x, int y, int mouse_button, int mouse_press_or_release);
@@ -49,9 +50,13 @@ protected:
 	//shader
 	std::unordered_map<std::string,std::unique_ptr<Shader>> m_shaders;
 
-	glm::vec2 m_viewport;
+	glm::ivec2 m_viewport;
 	std::unique_ptr<Camera> m_camera = nullptr;
 
 	//三维对象
 	std::vector<std::shared_ptr<RenderItem>> m_gameObjects;
+
+	//gbuffer
+	std::unique_ptr<GBuffer> m_gbuffer = nullptr;
+
 };

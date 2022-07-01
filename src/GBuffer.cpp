@@ -1,12 +1,9 @@
 #include "GBuffer.h"
 #include "fmt/core.h"
 
-GBuffer::GBuffer()
-{
-}
-
 GBuffer::~GBuffer()
 {
+	delete render_target;
 }
 
 void GBuffer::build(int width,int height)

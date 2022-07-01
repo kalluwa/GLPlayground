@@ -178,6 +178,8 @@ struct Shader
 
 	unsigned int setFromFile(std::string vs_path,std::string fs_path)
 	{
+		fmt::print("compile shader:\n{} \n{}\n",vs_path,fs_path);
+
 		auto getStr = [](std::string filepath)->std::string
 		{
 			std::ifstream ifs;

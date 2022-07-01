@@ -41,16 +41,36 @@ void GameApp::draw()
 {
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0, 0, 0, 0);
+
+	drawGBuffer();
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	
 	for(auto& render_item : m_gameObjects)
 	{
+		//set basic shader
+		render_item->shader = m_shaders["basic"].get();
 		render_item->render(m_camera.get());
 	}
 }
 
-void GameApp::drawGeometry()
+void GameApp::drawGBuffer()
 {
+	if(!m_gbuffer)
+		return;
 
+	if(!m_gbuffer->shader)
+		m_gbuffer->shader = m_shaders["gbuffer"].get();
+
+	m_gbuffer->draw([&](Shader* shader){
+		for (auto& render_item : m_gameObjects)
+		{
+			//set basic shader
+			render_item->shader = shader;
+			render_item->render(m_camera.get());
+		}
+	});
 }
 #pragma endregion
 
@@ -72,7 +92,7 @@ void GameApp::inputMouse(int x, int y, int mouse_button, int mouse_press_or_rele
 
 void GameApp::resize(int width,int height)
 {
-	m_viewport = glm::vec2(width,height);
+	m_viewport = glm::ivec2(width,height);
 	m_camera->viewport(0,0,width,height);
 	glViewport(0,0,width,height);
 }
@@ -105,34 +125,39 @@ void GameApp::loadContent()
 {
 	fmt::print("load content here\n");
 
+	//load shader
+	//-------------shader
+
+		//basic
+	std::unique_ptr<Shader> basic_shader(new Shader);
+	basic_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\basic.vs)", R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\basic.fs)");
+	this->m_shaders["basic"] = std::move(basic_shader);
+
+	//gbuffer
+	std::unique_ptr<Shader> gbuffer_shader(new Shader);
+	gbuffer_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\gbuffer.vs)", R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\gbuffer.fs)");
+	this->m_shaders["gbuffer"] = std::move(gbuffer_shader);
+
+	//gbuffer
+	m_gbuffer = std::make_unique<GBuffer>();
+	m_gbuffer->build(m_viewport.x,m_viewport.y);
+
+
+	//load mesh
 	std::unique_ptr<GeometryGenerator> gg(new GeometryGenerator);
 	std::string liver_mesh_path = R"(D:\games\organs_models\beihang\liver.obj)";
 	GeometryGenerator::MeshData liver_mesh_data;
 	if(gg->loadFromFile(liver_mesh_path,liver_mesh_data))
-	//gg->createBox(5,10,10,liver_mesh_data);
-	//gg->createTriangle(liver_mesh_data);
 	{
+		//gg->createBox(5,10,10,liver_mesh_data);
+		//gg->createTriangle(liver_mesh_data);
 		//mesh
 		std::shared_ptr<RenderItem> liver_object(new RenderItem());
 		auto liver_mesh = new MeshGeometry();
 		liver_mesh->setBuffer(std::vector<GeometryGenerator::MeshData>{liver_mesh_data});
 		liver_object->mesh = liver_mesh;
 		liver_mesh->name = "liver";
-		//TODO:Material
-		
-		//-------------shader
-
-		//basic
-		std::unique_ptr<Shader> basic_shader(new Shader);
-		basic_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\basic.vs)",R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\basic.fs)");
-		this->m_shaders["basic"] = std::move(basic_shader);
-		liver_object->shader = m_shaders["basic"].get();
-
-		//gbuffer
-		std::unique_ptr<Shader> gbuffer_shader(new Shader);
-		gbuffer_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\gbuffer.vs)", R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\gbuffer.fs)");
-		this->m_shaders["gbuffer"] = std::move(gbuffer_shader);
-
+		//liver_object->shader = m_shaders["basic"].get();
 
 		//push all
 		m_gameObjects.emplace_back(liver_object);

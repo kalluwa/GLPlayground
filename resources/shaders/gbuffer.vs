@@ -9,7 +9,7 @@ uniform mat4 proj;
 
 out vec3 worldpos;
 out vec3 worldnormal;
-out vec3 vs_uv;
+out vec2 vs_uv;
 
 void main()
 {
