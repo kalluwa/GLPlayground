@@ -15,10 +15,11 @@ void DebugViewer::drawTex(unsigned int texid,int x,int y,int width,int height)
 		return;
 	}
 	auto viewsize = app->getCamera()->getScreenSize();
-	glm::vec4 rect(x/viewsize.x,y/viewsize.y,2.0f*width/viewsize.x,2.0f*height/viewsize.y);
+	glm::vec4 rect(x/viewsize.x,y/viewsize.y,2.0f*width/viewsize.x,-2.0f*height/viewsize.y);
 	rect.x = 2.0f * rect.x -1.0f;
 	rect.y = -(2.0f * rect.y - 1.0f);
 
+	//fmt::print("rect {} {} {} {}\n",rect[0],rect[1],rect[2],rect[3]);
 	static unsigned int quad_vao = 0;
 	static unsigned int index_count;
 	if (quad_vao == 0)

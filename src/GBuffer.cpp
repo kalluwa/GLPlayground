@@ -39,6 +39,7 @@ void GBuffer::draw(std::function<void(Shader* shader)> callback)
 	}
 
 	begin();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//set shader first
 	callback(shader);

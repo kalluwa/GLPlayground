@@ -467,6 +467,11 @@ public:
 			glBindFramebuffer(GL_FRAMEBUFFER,0);
 	}
 
+	//get render taget textures;
+	std::vector<unsigned int>& getRenderTarget()
+	{
+		return m_tex_ids;
+	}
 
 private:
 
@@ -520,6 +525,15 @@ private:
 			m_tex_ids.emplace_back(colorbuffer);
 		}
 
+		//depth buffer
+		GLuint depthrenderbuffer;
+		glGenRenderbuffers(1, &depthrenderbuffer);
+		glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
+
+		m_tex_ids.emplace_back(depthrenderbuffer);
+
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if (status != GL_FRAMEBUFFER_COMPLETE)
 		{
@@ -534,6 +548,9 @@ private:
 		{
 			mrts.emplace_back(GL_COLOR_ATTACHMENT0 + i);
 		}
+
+		mrts.emplace_back(GL_DEPTH_ATTACHMENT);
+
 		glDrawBuffers(tex_types.size(), &mrts[0]);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

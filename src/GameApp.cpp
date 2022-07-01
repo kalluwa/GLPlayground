@@ -42,12 +42,12 @@ void GameApp::update(float delta_time)
 
 void GameApp::draw()
 {
-	glEnable(GL_DEPTH_TEST);
-	glClearColor(0, 0, 0, 0);
+	
 
 	drawGBuffer();
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glEnable(GL_DEPTH_TEST);
+	//glClearColor(0, 0, 0, 0);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	
 	for(auto& render_item : m_gameObjects)
@@ -58,14 +58,20 @@ void GameApp::draw()
 	}
 
 	//draw debugviewer
-	this->m_debug_viewer->drawTex(g_tex_id,0,0,100,100);
+	auto& rts = m_gbuffer->render_target->getRenderTarget();
+	auto viewsize = getCamera()->getScreenSize();
+	this->m_debug_viewer->drawTex(rts[0], 0, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
+	this->m_debug_viewer->drawTex(rts[1], viewsize.x * 0.25f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
+	//this->m_debug_viewer->drawTex(g_tex_id, 500, 500, 400, 400);
 }
 
 void GameApp::drawGBuffer()
 {
 	if(!m_gbuffer)
 		return;
-
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	if(!m_gbuffer->shader)
 		m_gbuffer->shader = m_shaders["gbuffer"].get();
 
@@ -101,6 +107,8 @@ void GameApp::resize(int width,int height)
 	m_viewport = glm::ivec2(width,height);
 	m_camera->viewport(0,0,width,height);
 	glViewport(0,0,width,height);
+
+	m_gbuffer->render_target->change(width,height);
 }
 void GameApp::inputKeyboard(int keycode, int action)
 {
@@ -184,10 +192,10 @@ void GameApp::loadContent()
 	m_debug_viewer->shader = this->m_shaders["screenquad"].get();
 
 	//load test image texture
-	auto loader = new TextureLoader();
-	auto tex = loader->load(R"(D:\projects\DX11-Car-Demo-master\Project1\Tex\floor.dds)");
-	g_tex_id = tex->tex_id;
-	fmt::print("tex id : {}\n",tex->tex_id);
+	//auto loader = new TextureLoader();
+	//auto tex = loader->load(R"(C:\Program Files (x86)\Epic Games\Launcher\Portal\SysFiles\0619_Rogue_Company.png)");
+	//g_tex_id = tex->tex_id;
+	//fmt::print("tex id : {}\n",tex->tex_id);
 
 }
 
