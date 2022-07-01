@@ -5,7 +5,7 @@
 #include <RenderItem.h>
 #include <camera.h>
 #include <GBuffer.h>
-
+#include <debugViewer.h>
 
 class GameApp
 {
@@ -58,5 +58,7 @@ protected:
 
 	//gbuffer
 	std::unique_ptr<GBuffer> m_gbuffer = nullptr;
+	//debug viewer
+	std::unique_ptr<DebugViewer> m_debug_viewer = nullptr;
 
 };

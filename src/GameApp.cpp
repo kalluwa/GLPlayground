@@ -1,8 +1,11 @@
 #include "GameApp.h"
 #include <fmt/core.h>
 #include <pystring.h>
+#include <TextureLoader.h>
 
 #pragma region construction
+
+unsigned int g_tex_id = 0;
 
 GameApp::GameApp(int w,int h)
 	:m_viewport(w,h)
@@ -53,6 +56,9 @@ void GameApp::draw()
 		render_item->shader = m_shaders["basic"].get();
 		render_item->render(m_camera.get());
 	}
+
+	//draw debugviewer
+	this->m_debug_viewer->drawTex(g_tex_id,0,0,100,100);
 }
 
 void GameApp::drawGBuffer()
@@ -130,14 +136,23 @@ void GameApp::loadContent()
 
 		//basic
 	std::unique_ptr<Shader> basic_shader(new Shader);
-	basic_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\basic.vs)", R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\basic.fs)");
+	basic_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\basic.vs)", 
+		R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\basic.fs)");
 	this->m_shaders["basic"] = std::move(basic_shader);
 
 	//gbuffer
 	std::unique_ptr<Shader> gbuffer_shader(new Shader);
-	gbuffer_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\gbuffer.vs)", R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\gbuffer.fs)");
+	gbuffer_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\gbuffer.vs)", 
+		R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\gbuffer.fs)");
 	this->m_shaders["gbuffer"] = std::move(gbuffer_shader);
 
+	std::unique_ptr<Shader> screenquad_shader(new Shader);
+	screenquad_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\screenquad.vs)", 
+		R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\screenquad.fs)");
+	this->m_shaders["screenquad"] = std::move(screenquad_shader);
+
+	//-------------shader end
+	// 
 	//gbuffer
 	m_gbuffer = std::make_unique<GBuffer>();
 	m_gbuffer->build(m_viewport.x,m_viewport.y);
@@ -163,6 +178,16 @@ void GameApp::loadContent()
 		m_gameObjects.emplace_back(liver_object);
 
 	};
+
+
+	m_debug_viewer = std::make_unique<DebugViewer>(this);
+	m_debug_viewer->shader = this->m_shaders["screenquad"].get();
+
+	//load test image texture
+	auto loader = new TextureLoader();
+	auto tex = loader->load(R"(D:\projects\DX11-Car-Demo-master\Project1\Tex\floor.dds)");
+	g_tex_id = tex->tex_id;
+	fmt::print("tex id : {}\n",tex->tex_id);
 
 }
 
