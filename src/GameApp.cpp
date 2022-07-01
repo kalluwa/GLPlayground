@@ -65,9 +65,9 @@ void GameApp::inputMouse(int x, int y, int mouse_button, int mouse_press_or_rele
 {
 	m_camera->updateMouseState(x,y,mouse_button, mouse_press_or_release);
 
-	auto pos = m_camera->getPosition();
-	auto target = m_camera->getTarget();
-	fmt::print("cam pos:{},{},{}\n cam target:{},{},{}\n",pos.x,pos.y,pos.z,target.x,target.y,target.z);
+	//auto pos = m_camera->getPosition();
+	//auto target = m_camera->getTarget();
+	//fmt::print("cam pos:{},{},{}\n cam target:{},{},{}\n",pos.x,pos.y,pos.z,target.x,target.y,target.z);
 }
 
 void GameApp::resize(int width,int height)
@@ -120,12 +120,18 @@ void GameApp::loadContent()
 		liver_mesh->name = "liver";
 		//TODO:Material
 		
-		//shader
+		//-------------shader
+
+		//basic
 		std::unique_ptr<Shader> basic_shader(new Shader);
 		basic_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\basic.vs)",R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\basic.fs)");
 		this->m_shaders["basic"] = std::move(basic_shader);
 		liver_object->shader = m_shaders["basic"].get();
 
+		//gbuffer
+		std::unique_ptr<Shader> gbuffer_shader(new Shader);
+		gbuffer_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\gbuffer.vs)", R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\gbuffer.fs)");
+		this->m_shaders["gbuffer"] = std::move(gbuffer_shader);
 
 
 		//push all

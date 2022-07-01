@@ -10,6 +10,32 @@
 #include <sstream>
 #include <fmt/core.h>
 
+
+
+inline GLenum glCheckError_(const char* file, int line)
+{
+	GLenum errorCode;
+	while ((errorCode = glGetError()) != GL_NO_ERROR)
+	{
+		std::string error;
+		switch (errorCode)
+		{
+		case GL_INVALID_ENUM:                  error = "INVALID_ENUM"; break;
+		case GL_INVALID_VALUE:                 error = "INVALID_VALUE"; break;
+		case GL_INVALID_OPERATION:             error = "INVALID_OPERATION"; break;
+			//case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW"; break;
+			//case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;
+		case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
+		default:
+			error = "undefined";
+		}
+		std::cout << error << " | " << file << " (" << line << ")" << std::endl;
+	}
+	return errorCode;
+};
+#define glCheckError() glCheckError_(__FILE__, __LINE__) 
+
 struct Material
 {
 	Material()
@@ -354,6 +380,9 @@ struct Shader
 };
 
 
+
+
+
 struct Texture
 {
 	Texture()
@@ -399,4 +428,125 @@ struct ObjectLight
 	Material mat;
 	glm::vec3 eye_pos;
 };
+
+
+//fbo
+
+
+//!create fbo
+//http://www.mamicode.com/info-detail-1767795.html
+class RenderTarget
+{
+public:
+	RenderTarget(int width,int height)
+		:m_width(width),m_height(height)
+	{
+		this->m_fbo = createFBO(m_width,m_height);
+	};
+
+	void change(int width,int height)
+	{
+		m_width = (width);
+		m_height = (height);
+		auto fbo = createFBO(width,height);
+		this->m_fbo = fbo;
+	}
+
+	~RenderTarget()
+	{
+		free();
+	}
+
+	void bind(bool bindthis=true)
+	{
+		if(bindthis)
+			glBindFramebuffer(GL_FRAMEBUFFER,this->m_fbo);
+		else
+			glBindFramebuffer(GL_FRAMEBUFFER,0);
+	}
+
+
+private:
+
+	void free()
+	{
+		//free before
+		if (m_tex_ids.size() != 0)
+		{
+			printf("warning colorBuffers'size is not zero");
+			for (size_t i = 0; i < m_tex_ids.size(); i++)
+			{
+				glDeleteTextures(1, &m_tex_ids[i]);
+			}
+
+			m_tex_ids.clear();
+		}
+	}
+
+	inline GLuint createFBO(int width, int height)
+	{
+		std::vector<unsigned int> tex_types = {
+			GL_FLOAT, // position map
+			GL_FLOAT, // normal map
+			GL_UNSIGNED_BYTE, // diffuse map
+		};
+
+		free();
+		
+		GLuint fbo;
+		glGenFramebuffers(1, &fbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+		//color buffer
+		for (int i = 0; i < tex_types.size(); i++)
+		{
+			GLuint colorbuffer;
+			glGenTextures(1, &colorbuffer);
+			glBindTexture(GL_TEXTURE_2D, colorbuffer);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			if (tex_types[i] == GL_FLOAT)
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, tex_types[i], nullptr);
+			else
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, tex_types[i], nullptr);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorbuffer, 0);
+
+
+			glBindTexture(GL_TEXTURE_2D, 0);
+			m_tex_ids.emplace_back(colorbuffer);
+		}
+
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (status != GL_FRAMEBUFFER_COMPLETE)
+		{
+			printf("FBO Create Fail\n");
+		}
+
+		//tell the gpu : what i want to draw
+		//GLenum mrt[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2 };
+		//glDrawBuffers(3, mrt);
+		std::vector<GLenum> mrts;
+		for (int i=0;i<tex_types.size();i++)
+		{
+			mrts.emplace_back(GL_COLOR_ATTACHMENT0 + i);
+		}
+		glDrawBuffers(tex_types.size(), &mrts[0]);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+		return fbo;
+	};
+
+
+	//varibles
+	
+	int m_width,m_height;
+	unsigned int m_fbo;
+	std::vector<unsigned int> m_tex_types;
+	std::vector<unsigned int> m_tex_ids;
+};
+
+
 #endif
