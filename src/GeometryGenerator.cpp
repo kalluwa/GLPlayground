@@ -682,7 +682,7 @@ bool GeometryGenerator::loadFromFile(const std::string& file_path,MeshData& mesh
 	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, file_path.c_str());
 
 	//∂¡»°±®¥Ì
-	if (!err.empty())fmt::print(err);
+	if (!err.empty()) fmt::print(err);
 	//∂¡»° ß∞‹
 	if(!ret) return false;
 

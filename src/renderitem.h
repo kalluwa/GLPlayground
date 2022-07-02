@@ -76,7 +76,13 @@ public:
 	unsigned int primitive_type = GL_TRIANGLES;
 	Material* mat = nullptr;
 	MeshGeometry* mesh = nullptr;
-	Texture* tex = nullptr;
+	
+	Texture* tex_diffuse = nullptr;
+	Texture* tex_normal = nullptr;
+	Texture* tex_ao = nullptr;
+	Texture* tex_matallic = nullptr;
+	Texture* tex_roughness = nullptr;
+
 	Shader* shader = nullptr;
 
 	unsigned int index_count = 0;

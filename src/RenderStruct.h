@@ -551,6 +551,7 @@ private:
 
 		mrts.emplace_back(GL_DEPTH_ATTACHMENT);
 
+
 		glDrawBuffers(tex_types.size(), &mrts[0]);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <SOIL2.h>
+#include <filesystem>
 #include "RenderStruct.h"
 class TextureLoader
 {
@@ -23,6 +24,12 @@ public:
 		std::string fullpath = filepath;
 		if(m_texture_folder.size() > 0)
 			fullpath = m_texture_folder + "/"+ filepath;
+
+		namespace fs = std::filesystem;
+		if(!fs::exists(fullpath))
+		{
+			fmt::print("texture not found:{}\n",fullpath);
+		}
 
 		auto texture_id = SOIL_load_OGL_texture
 		(

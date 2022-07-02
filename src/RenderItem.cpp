@@ -132,6 +132,13 @@ void RenderItem::render(Camera* camera)
 		shader->setUniformVf("cam_pos", camera->getPosition());
 		shader->setUniformVf("viewport_size", camera->getScreenSize());
 
+		//pbr texture setting
+		if (tex_diffuse) shader->setTex2d("tex_diffuse",tex_diffuse->tex_id);
+		if (tex_normal) shader->setTex2d("tex_normal", tex_normal->tex_id);
+		if (tex_ao) shader->setTex2d("tex_ao", tex_ao->tex_id);
+		if (tex_matallic) shader->setTex2d("tex_matallic", tex_matallic->tex_id);
+		if (tex_roughness) shader->setTex2d("tex_roughness", tex_roughness->tex_id);
+
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh->index_buffer);
 		for (auto& [name,geo] : mesh->drawing_args)
 		{

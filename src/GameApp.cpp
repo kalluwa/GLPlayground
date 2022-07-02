@@ -45,9 +45,9 @@ void GameApp::draw()
 	
 
 	drawGBuffer();
-	//glEnable(GL_DEPTH_TEST);
-	//glClearColor(0, 0, 0, 0);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	
 	for(auto& render_item : m_gameObjects)
@@ -62,6 +62,7 @@ void GameApp::draw()
 	auto viewsize = getCamera()->getScreenSize();
 	this->m_debug_viewer->drawTex(rts[0], 0, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
 	this->m_debug_viewer->drawTex(rts[1], viewsize.x * 0.25f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
+	this->m_debug_viewer->drawTex(rts[2], viewsize.x * 0.5f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
 	//this->m_debug_viewer->drawTex(g_tex_id, 500, 500, 400, 400);
 }
 
@@ -69,7 +70,6 @@ void GameApp::drawGBuffer()
 {
 	if(!m_gbuffer)
 		return;
-	glEnable(GL_DEPTH_TEST);
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	if(!m_gbuffer->shader)
@@ -144,19 +144,19 @@ void GameApp::loadContent()
 
 		//basic
 	std::unique_ptr<Shader> basic_shader(new Shader);
-	basic_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\basic.vs)", 
-		R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\basic.fs)");
+	basic_shader->setFromFile(R"(resources\shaders\basic.vs)", 
+		R"(resources\shaders\basic.fs)");
 	this->m_shaders["basic"] = std::move(basic_shader);
 
 	//gbuffer
 	std::unique_ptr<Shader> gbuffer_shader(new Shader);
-	gbuffer_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\gbuffer.vs)", 
-		R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\gbuffer.fs)");
+	gbuffer_shader->setFromFile(R"(resources\shaders\gbuffer.vs)", 
+		R"(resources\shaders\gbuffer.fs)");
 	this->m_shaders["gbuffer"] = std::move(gbuffer_shader);
 
 	std::unique_ptr<Shader> screenquad_shader(new Shader);
-	screenquad_shader->setFromFile(R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\screenquad.vs)", 
-		R"(C:\Users\kallu\source\repos\LiverViewer\resources\shaders\screenquad.fs)");
+	screenquad_shader->setFromFile(R"(resources\shaders\screenquad.vs)", 
+		R"(resources\shaders\screenquad.fs)");
 	this->m_shaders["screenquad"] = std::move(screenquad_shader);
 
 	//-------------shader end
@@ -165,7 +165,13 @@ void GameApp::loadContent()
 	m_gbuffer = std::make_unique<GBuffer>();
 	m_gbuffer->build(m_viewport.x,m_viewport.y);
 
+	//textures-----------------
+	//load basictexture
+	auto loader = new TextureLoader();
+	auto tex = loader->load(R"(D:\games\organs_models\beihang\FQJ_DanNang_Gan.png)");
+	m_textures["liver_diffuse"] = std::move(tex);
 
+	// textures----------------------
 	//load mesh
 	std::unique_ptr<GeometryGenerator> gg(new GeometryGenerator);
 	std::string liver_mesh_path = R"(D:\games\organs_models\beihang\liver.obj)";
@@ -180,7 +186,7 @@ void GameApp::loadContent()
 		liver_mesh->setBuffer(std::vector<GeometryGenerator::MeshData>{liver_mesh_data});
 		liver_object->mesh = liver_mesh;
 		liver_mesh->name = "liver";
-		//liver_object->shader = m_shaders["basic"].get();
+		liver_object->tex_diffuse = m_textures["liver_diffuse"].get();
 
 		//push all
 		m_gameObjects.emplace_back(liver_object);

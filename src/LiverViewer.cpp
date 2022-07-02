@@ -25,6 +25,57 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 		game_app->inputMouse(xpos, ypos, -1, -1);
 };
 
+void calc_FPS(GLFWwindow* window,float& dt)
+{
+	static float t0 = 0.0;
+	static float t1 = 0.0;
+	static char title[256];
+	static int frames = 0;
+
+	float t = (float)glfwGetTime();
+
+	dt = t - t0;
+	t0 = t;
+
+	t1 += dt;
+
+	if (t1 > 0.25)
+	{
+		float fps = (float)frames / t1;
+
+		GLuint64 timeStamp[7];
+
+		//for (int i = 0; i < 7; ++i)
+		//	glGetQueryObjectui64v(queryID[i], GL_QUERY_RESULT, &timeStamp[i]);
+
+		//double geom = (timeStamp[1] - timeStamp[0]) / 1000000.0;
+		//double down = (timeStamp[2] - timeStamp[1]) / 1000000.0;
+		//double ao = (timeStamp[3] - timeStamp[2]) / 1000000.0;
+		//double up = (timeStamp[4] - timeStamp[3]) / 1000000.0;
+		//double blur = (timeStamp[5] - timeStamp[4]) / 1000000.0;
+		//double comp = (timeStamp[6] - timeStamp[5]) / 1000000.0;
+		//double tot = (timeStamp[6] - timeStamp[0]) / 1000000.0;
+
+		//sprintf(title, "Fullres: %i, FPS: %2.1f, time(ms): geom %2.2f, down %2.2f, ao %2.2f, up %2.2f, blur %2.2f, comp %2.2f tot %2.2f",
+		//	(int)fullres,
+		//	fps,
+		//	geom,
+		//	down,
+		//	ao,
+		//	up,
+		//	blur,
+		//	comp,
+		//	tot);
+
+		sprintf(title,"FPS:%2.1f",fps);
+		glfwSetWindowTitle(window, title);
+		t1 = 0.0;
+		frames = 0;
+	}
+
+	++frames;
+}
+
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
 	game_app->inputMouseScroll(yoffset>0?120:-120);
@@ -87,16 +138,19 @@ int main()
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0,0,0,0);
+	float dt;
 	//运行
 	while (!glfwWindowShouldClose(window))
 	{
-		auto time_now = std::chrono::steady_clock::now();
-		auto elapsed_millisecond_time = std::chrono::duration_cast<std::chrono::milliseconds>(time_now - time_last).count();
-		float elasped_second_time = std::max(1.0f,float(elapsed_millisecond_time)) / float(1000.0f);
-		time_last = time_now;
+		//auto time_now = std::chrono::steady_clock::now();
+		//auto elapsed_millisecond_time = std::chrono::duration_cast<std::chrono::milliseconds>(time_now - time_last).count();
+		//float elasped_second_time = std::max(1.0f,float(elapsed_millisecond_time)) / float(1000.0f);
+		//time_last = time_now;
+
+		calc_FPS(window,dt);
 
 		//fmt::print("elasped time {} s\n",elasped_second_time);
-		game_app->update(elasped_second_time);
+		game_app->update(dt);//elasped_second_time);
 
 		/* Render here */
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
