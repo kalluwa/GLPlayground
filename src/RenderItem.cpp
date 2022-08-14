@@ -40,10 +40,15 @@ void Transform::update()
 
 RenderItem::RenderItem()
 {
+	mat = new Material();
+	mat->diffuse = glm::vec3(1,1,1);
+	mat->specular = glm::vec3(1,1,1);
 }
 
 RenderItem::~RenderItem()
 {
+	if(mat)
+		delete mat;
 }
 
 
@@ -127,17 +132,22 @@ void RenderItem::render(Camera* camera)
 		glVertexAttribPointer(att_uv, 3, GL_FLOAT, GL_FALSE, 12 + 12 + 8, (void*)24);
 
 		//uniforms
+		shader->setUniformMf("model",transform.world);
 		shader->setUniformMf("view",camera->getViewMatrix());
 		shader->setUniformMf("proj",camera->getProjectionMatrix());
 		shader->setUniformVf("cam_pos", camera->getPosition());
 		shader->setUniformVf("viewport_size", camera->getScreenSize());
 
+		//mat
+		shader->setUniformInt("use_tex",tex_diffuse?1:0);
+		shader->setUniformVf("diffuse_color",this->mat->diffuse);
+
 		//pbr texture setting
-		if (tex_diffuse) shader->setTex2d("tex_diffuse",tex_diffuse->tex_id);
-		if (tex_normal) shader->setTex2d("tex_normal", tex_normal->tex_id);
-		if (tex_ao) shader->setTex2d("tex_ao", tex_ao->tex_id);
-		if (tex_matallic) shader->setTex2d("tex_matallic", tex_matallic->tex_id);
-		if (tex_roughness) shader->setTex2d("tex_roughness", tex_roughness->tex_id);
+		if (tex_diffuse) shader->setTex2d("tex_diffuse",tex_diffuse->tex_id); else shader->setTex2d("tex_diffuse",0);
+		if (tex_normal) shader->setTex2d("tex_normal", tex_normal->tex_id);else shader->setTex2d("tex_normal",0);
+		if (tex_ao) shader->setTex2d("tex_ao", tex_ao->tex_id);else shader->setTex2d("tex_ao",0);
+		if (tex_matallic) shader->setTex2d("tex_matallic", tex_matallic->tex_id);else shader->setTex2d("tex_matallic",0);
+		if (tex_roughness) shader->setTex2d("tex_roughness", tex_roughness->tex_id);else shader->setTex2d("tex_roughness",0);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh->index_buffer);
 		for (auto& [name,geo] : mesh->drawing_args)

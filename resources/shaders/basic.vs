@@ -1,15 +1,15 @@
-#version 330
+#version 450
 
-in vec3 position;
-in vec3 normal;
-in vec2 uv;
+layout(location=0) in vec3 position;
+layout(location=1) in vec3 normal;
+layout(location=2) in vec2 uv;
 
 uniform mat4 view;
 uniform mat4 proj;
 
-out vec4 color;
-out vec3 worldpos;
-out vec3 worldnormal;
+layout(location=0) out vec4 color;
+layout(location=1) out vec3 worldpos;
+layout(location=2) out vec3 worldnormal;
 
 void main()
 {

@@ -71,7 +71,13 @@ public:
 	///</summary>
 	void createGrid(float width, float depth, unsigned int m, unsigned int n, MeshData& meshData);
 
-	void createScreenQuad(MeshData& meshData, float k, glm::vec2 offset);
+	/// <summary>
+	/// create screen quad in ndc space
+	/// </summary>
+	/// <param name="meshData"></param>
+	/// <param name="k"></param>
+	/// <param name="offset"></param>
+	void createScreenQuad(MeshData& meshData, float k=1.0f, glm::vec2 offset=glm::vec2(0,0));
 
 	//下面是自定义的方法
 	

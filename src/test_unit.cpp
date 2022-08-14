@@ -31,4 +31,16 @@ void TestUnit::runAll()
 {
 	//TestLoadTexture();
 	//TestLoadObj();
+
+	//int buf[256] = {0};
+	//
+	//int num = 0;
+	//glGetIntegerv(GL_NUM_SHADER_BINARY_FORMATS,&num);
+	//if(num)
+	//{
+	//	std::unique_ptr<int[]> formats (new int[num]);
+	//	glGetIntegerv(GL_SHADER_BINARY_FORMATS,formats.get());
+
+	//	int a = 0;
+	//}
 }

@@ -1,13 +1,13 @@
-#version 330
+#version 450
 
-in vec4 color;
-in vec3 worldpos;
-in vec3 worldnormal;
+layout(location=0) in vec4 color;
+layout(location=1) in vec3 worldpos;
+layout(location=2) in vec3 worldnormal;
 
 uniform vec3 cam_pos;
 uniform vec2 viewport_size;
 
-out vec4 out_color;
+layout(location=0) out vec4 out_color;
 
 void main()
 {

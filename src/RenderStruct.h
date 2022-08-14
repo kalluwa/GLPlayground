@@ -9,6 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include <fmt/core.h>
+#include <pystring.h>
 
 
 
@@ -176,10 +177,167 @@ struct Shader
 
 	}
 
+	unsigned int setBinary(std::string vs_path,std::string fs_path)
+	{
+		//https://www.geeks3d.com/20200211/how-to-load-spir-v-shaders-in-opengl/
+
+		std::string vs_spv = vs_path;
+		if(!pystring::endswith(vs_path,".spv"))
+			vs_spv += ".spv";
+		std::string fs_spv = fs_path;
+		if(!pystring::endswith(fs_spv,".spv"))
+			fs_spv += ".spv";
+
+
+		//get file content
+		auto getFileContent = [](const std::string& filepath,int& byte_length){
+			FILE* file = fopen(filepath.c_str(),"rb");
+			byte_length = 0;
+			if(!file)
+				throw std::string(filepath + " not found!");
+
+			fseek(file,0,std::ios::end);
+			byte_length = ftell(file);
+			fseek(file,0,std::ios::beg);
+			std::unique_ptr<unsigned char[]> buf(new unsigned char[byte_length]);
+			fread(buf.get(),1,byte_length,file);
+			fclose(file);
+
+			return std::move(buf);
+		};
+
+
+		int vs_byte_len = 0;
+		auto vs_buf = getFileContent(vs_spv, vs_byte_len);
+		int fs_byte_len = 0;
+		auto fs_buf = getFileContent(fs_spv,fs_byte_len);
+
+		auto vs_shader = glCreateShader(GL_VERTEX_SHADER);
+		auto fs_shader = glCreateShader(GL_FRAGMENT_SHADER);
+
+#pragma region check binary shader support
+
+		// https://docs.microsoft.com/en-us/windows/win32/opengl/using-the-query-functions
+		// https://www.khronos.org/registry/OpenGL-Refpages/gl4/
+		// https://www.jianshu.com/p/e9a9744e318a
+		
+		//int num = 0;
+		//glGetIntegerv(GL_NUM_SHADER_BINARY_FORMATS, &num);
+		//if (!num)
+		//{
+		//	fmt::print("binary shader: not supported");
+		//	throw std::string("binary shader: not supported");
+		//}
+
+		//std::unique_ptr<int[]> formats(new int[num]);
+		//glGetIntegerv(GL_SHADER_BINARY_FORMATS, formats.get());
+#pragma endregion
+
+
+
+		glShaderBinary(1, &vs_shader, GL_SHADER_BINARY_FORMAT_SPIR_V, vs_buf.get(), vs_byte_len);
+		glSpecializeShader(vs_shader, "main", 0, 0, 0);
+
+		
+
+		//get compile status
+		int compiled_vs = 0;
+		glGetShaderiv(vs_shader, GL_COMPILE_STATUS, &compiled_vs);
+
+		if (compiled_vs != 0)
+		{
+			std::vector<char> info;
+			info.reserve(compiled_vs + 1);
+			info.resize(compiled_vs);
+
+			GLsizei len;
+			glGetShaderInfoLog(vs_shader, compiled_vs, &len, &info[0]);
+			if (info[compiled_vs - 1] != '\0')
+			{
+				info.push_back('\0');
+			}
+
+			std::cout <<vs_spv<< &info[0] << "\n";
+		}
+
+		glShaderBinary(1, &fs_shader, GL_SHADER_BINARY_FORMAT_SPIR_V, fs_buf.get(), fs_byte_len);
+		glSpecializeShader(fs_shader, "main", 0, 0, 0);
+		int compiled_fs = 0;
+		glGetShaderiv(fs_shader, GL_COMPILE_STATUS, &compiled_fs);
+
+		if (compiled_fs != 0)
+		{
+			std::vector<char> info;
+			info.reserve(compiled_fs + 1);
+			info.resize(compiled_fs);
+
+			GLsizei len;
+			glGetShaderInfoLog(fs_shader, compiled_fs, &len, &info[0]);
+			if (info[compiled_fs - 1] != '\0')
+			{
+				info.push_back('\0');
+			}
+
+			std::cout <<fs_spv<< &info[0] << "\n";
+		}
+
+		//create program
+		GLuint prog = glCreateProgram();
+		if (prog == 0)
+		{
+			glDeleteShader(vs_shader);
+			glDeleteShader(fs_shader);
+			std::cout << "[SHADER]Failed to create program.\n";
+			system("pause");
+			return 0;
+		}
+		glAttachShader(prog, vs_shader);
+		glAttachShader(prog, fs_shader);
+		glLinkProgram(prog);
+
+		GLint infoLength;
+		glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &infoLength);
+		if (infoLength != 0)
+		{
+			std::vector<char> info;
+			info.reserve(infoLength + 1);
+			info.resize(infoLength);
+
+			GLsizei len;
+			glGetProgramInfoLog(prog, infoLength, &len, &info[0]);
+			if (info[infoLength - 1] != '\0')
+			{
+				info.push_back('\0');
+			}
+
+			std::cout << &info[0] << "\n";
+		}
+
+		GLint linkStatus;
+		glGetProgramiv(prog, GL_LINK_STATUS, &linkStatus);
+		if (linkStatus != GL_TRUE)
+		{
+			glDeleteShader(vs_shader);
+			glDeleteShader(fs_shader);
+			std::cout << "Failed to link shader.\n";
+			system("pause");
+			return 0;
+		}
+
+		glDeleteShader(vs_shader);
+		glDeleteShader(fs_shader);
+
+		program_id = prog;
+
+		return prog;
+	}
+
 	unsigned int setFromFile(std::string vs_path,std::string fs_path)
 	{
-		fmt::print("compile shader:\n{} \n{}\n",vs_path,fs_path);
-
+#if 0
+		setBinary(vs_path,fs_path);
+#else
+		fmt::print("compile shader:\n{} \n{}\n", vs_path, fs_path);
 		auto getStr = [](std::string filepath)->std::string
 		{
 			std::ifstream ifs;
@@ -202,7 +360,7 @@ struct Shader
 		};
 
 		set(getStr(vs_path),getStr(fs_path));
-
+#endif
 		return program_id;
 	};
 	std::string vs_str;
@@ -256,6 +414,32 @@ struct Shader
 			break;
 		case 4:
 			glUniform4fv(glGetUniformLocation(program_id, paramname.c_str()), 1, &val[0]);
+			break;
+		default:
+			return false;
+		}
+
+		return true;
+	};
+
+	//!set vector uniforms
+	template<size_t N,size_t M>
+	bool setUniformVAf(const std::string& paramname, glm::vec<N, float, glm::highp>* val)
+	{
+#ifndef NDEBUG
+		if (!ifUniformExist(paramname))return false;
+#endif
+		//Ä¬ÈÏ·µ»Øfalse
+		switch (N)
+		{
+		case 2:
+			glUniform2fv(glGetUniformLocation(program_id, paramname.c_str()), M, (float*)&val[0]);
+			break;
+		case 3:
+			glUniform3fv(glGetUniformLocation(program_id, paramname.c_str()), M, (float*)&val[0]);
+			break;
+		case 4:
+			glUniform4fv(glGetUniformLocation(program_id, paramname.c_str()), M, (float*)&val[0]);
 			break;
 		default:
 			return false;
@@ -440,18 +624,19 @@ struct ObjectLight
 class RenderTarget
 {
 public:
-	RenderTarget(int width,int height)
+	RenderTarget(int width,int height,const std::vector<unsigned int>& rt_types )
 		:m_width(width),m_height(height)
 	{
-		this->m_fbo = createFBO(m_width,m_height);
+		this->m_tex_types = rt_types;
+		createFBO(m_width,m_height);
 	};
 
 	void change(int width,int height)
 	{
 		m_width = (width);
 		m_height = (height);
-		auto fbo = createFBO(width,height);
-		this->m_fbo = fbo;
+		createFBO(width,height);
+		
 	}
 
 	~RenderTarget()
@@ -462,11 +647,18 @@ public:
 	void bind(bool bindthis=true)
 	{
 		if(bindthis)
+		{
 			glBindFramebuffer(GL_FRAMEBUFFER,this->m_fbo);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		}
 		else
 			glBindFramebuffer(GL_FRAMEBUFFER,0);
 	}
 
+	glm::ivec2 getSize()
+	{
+		return glm::ivec2(m_width,m_height);
+	}
 	//get render taget textures;
 	std::vector<unsigned int>& getRenderTarget()
 	{
@@ -480,28 +672,41 @@ private:
 		//free before
 		if (m_tex_ids.size() != 0)
 		{
-			printf("warning colorBuffers'size is not zero");
-			for (size_t i = 0; i < m_tex_ids.size(); i++)
+			printf("warning colorBuffers'size is not zero,free now\n");
+			for (size_t i = 0; i < m_tex_ids.size()-1; i++)
 			{
+				//cause errors
 				glDeleteTextures(1, &m_tex_ids[i]);
 			}
+			glDeleteRenderbuffers(1,&m_tex_ids[m_tex_ids.size()-1]);
 
 			m_tex_ids.clear();
+
+			//glDeleteFramebuffers(1,&m_fbo);
+			//m_fbo = 0;
 		}
 	}
 
 	inline GLuint createFBO(int width, int height)
 	{
-		std::vector<unsigned int> tex_types = {
-			GL_FLOAT, // position map
-			GL_FLOAT, // normal map
-			GL_UNSIGNED_BYTE, // diffuse map
-		};
+		//std::vector<unsigned int> tex_types = {
+		//	GL_FLOAT, // position map
+		//	GL_FLOAT, // normal map
+		//	GL_UNSIGNED_BYTE, // diffuse map
+		//};
+
+		//copy
+
+		auto tex_types = m_tex_types;
 
 		free();
 		
-		GLuint fbo;
-		glGenFramebuffers(1, &fbo);
+		GLuint fbo = m_fbo;
+		if(m_fbo == 0)
+		{
+			glGenFramebuffers(1, &fbo);
+			m_fbo = fbo;
+		}
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 		//color buffer
@@ -549,12 +754,11 @@ private:
 			mrts.emplace_back(GL_COLOR_ATTACHMENT0 + i);
 		}
 
-		mrts.emplace_back(GL_DEPTH_ATTACHMENT);
+		//mrts.emplace_back(GL_DEPTH_ATTACHMENT);
 
 
 		glDrawBuffers(tex_types.size(), &mrts[0]);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 
 		return fbo;
 	};
@@ -563,7 +767,7 @@ private:
 	//varibles
 	
 	int m_width,m_height;
-	unsigned int m_fbo;
+	unsigned int m_fbo = 0;
 	std::vector<unsigned int> m_tex_types;
 	std::vector<unsigned int> m_tex_ids;
 };

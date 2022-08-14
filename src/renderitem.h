@@ -63,7 +63,7 @@ public:
 	glm::mat4 init_rot = glm::mat4(1.0f);
 	glm::mat4 world = glm::mat4(1.0f);
 	
-	Transform* parent;
+	Transform* parent = nullptr;
 };
 
 

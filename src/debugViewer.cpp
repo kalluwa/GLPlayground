@@ -14,6 +14,7 @@ void DebugViewer::drawTex(unsigned int texid,int x,int y,int width,int height)
 
 		return;
 	}
+	glDisable(GL_DEPTH_TEST);
 	auto viewsize = app->getCamera()->getScreenSize();
 	glm::vec4 rect(x/viewsize.x,y/viewsize.y,2.0f*width/viewsize.x,-2.0f*height/viewsize.y);
 	rect.x = 2.0f * rect.x -1.0f;
@@ -70,4 +71,7 @@ void DebugViewer::drawTex(unsigned int texid,int x,int y,int width,int height)
 	glCullFace(GL_BACK);
 
 	shader->end();
+
+
+	glEnable(GL_DEPTH_TEST);
 }

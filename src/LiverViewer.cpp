@@ -101,17 +101,22 @@ int main()
 	GLFWwindow* window = nullptr;
 	if(!glfwInit())
 		return -1;
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	std::string title = "LiverViewer";
 
 	int width = 800;
 	int height = 600;
+	//glfwWindowHint(GLFW_SAMPLES, 4);
 	window = glfwCreateWindow(width,height,title.c_str(),nullptr,nullptr);
 	if(!window)
 	{
 		glfwTerminate();
 		return -1;
 	}
+
 
 	//绑定当前window
 	glfwMakeContextCurrent(window);
@@ -136,6 +141,8 @@ int main()
 
 	auto time_last = std::chrono::steady_clock::now();
 
+
+	//glEnable(GL_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0,0,0,0);
 	float dt;

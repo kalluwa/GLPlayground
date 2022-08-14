@@ -44,6 +44,30 @@ public:
 		return texture;
 	}
 
+	std::unique_ptr<Texture> genTex(int width,int height,int depth,bool random=true,unsigned char val=255)
+	{
+		if(!(depth == 1 || depth == 3))
+		{
+			fmt::print("image format not supported\n");
+			throw std::string("image format not supported\n");
+		}
+		std::unique_ptr<unsigned char[]> img_data(new unsigned char[width * height * depth]);
+		if(random)
+			for (int i=0;i<width * height * depth;i++)img_data[i] = rand() % 255;
+		else
+			for (int i=0;i<width * height * depth;i++) img_data[i] = val;
+
+		auto texture_id = SOIL_load_OGL_texture_from_memory(
+			img_data.get(),
+			width*height*depth,
+			depth,
+			SOIL_CREATE_NEW_ID,
+			SOIL_FLAG_POWER_OF_TWO|SOIL_FLAG_MIPMAPS);
+
+		std::unique_ptr<Texture> texture(new Texture());
+		texture->set(texture_id);
+		return texture;
+	}
 private:
 	std::string m_texture_folder = "";
 };

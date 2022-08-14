@@ -4,6 +4,7 @@ in vec3 position;
 in vec3 normal;
 in vec2 uv;
 
+uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
 
@@ -11,10 +12,17 @@ out vec3 worldpos;
 out vec3 worldnormal;
 out vec2 vs_uv;
 
+out float vs_depth;
+
 void main()
 {
 	vs_uv = uv;
 	worldnormal = normalize(normal);
-	worldpos = (view * vec4(position, 1)).xyz;
-	gl_Position = proj * view * vec4(position, 1);
+	vec4 view_pos = (view * model * vec4(position, 1));
+	worldpos = position.xyz;
+
+	gl_Position = proj * view * model * vec4(position, 1);
+
+	
+	vs_depth = gl_Position.z;// / gl_Position.w;
 }

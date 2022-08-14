@@ -46,24 +46,51 @@ void GameApp::draw()
 
 	drawGBuffer();
 
+	drawShadowMap();
+
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	
-	for(auto& render_item : m_gameObjects)
+	//for(auto& render_item : m_gameObjects)
+	//{
+	//	//set basic shader
+	//	render_item->shader = m_shaders["basic"].get();
+	//	render_item->render(m_camera.get());
+	//}
+	// 
+
+	auto& rts = m_gbuffer->render_target->getRenderTarget();
+	auto& rt_shadow = m_shadow_map->rt->getRenderTarget();
+	//post process
+	if(m_post_composer && m_post_composer->m_passes.size())
 	{
-		//set basic shader
-		render_item->shader = m_shaders["basic"].get();
-		render_item->render(m_camera.get());
+		//set first pass
+		auto& thispass = m_post_composer->m_passes[0];
+		thispass->textures["position_map"] = rts[0];
+		thispass->textures["normal_map"] = rts[1];
+		thispass->textures["diffuse_map"] = rts[2];
+		thispass->textures["noise_map"] = this->m_textures["noise_tex"]->tex_id;
+		thispass->textures["shadowMap"] = rt_shadow[0];
+
+		thispass->shader = m_shaders["lighting_default"].get();
+		//set shadow matrix
+		//fxaa pass
+		auto& fxaapass = m_post_composer->m_passes[1];
+		fxaapass->shader->begin();
+		fxaapass->shader->setUniformVf("resolution",1.0f/glm::vec2(getViewport()));
+		m_post_composer->draw();
 	}
 
+
 	//draw debugviewer
-	auto& rts = m_gbuffer->render_target->getRenderTarget();
 	auto viewsize = getCamera()->getScreenSize();
 	this->m_debug_viewer->drawTex(rts[0], 0, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
 	this->m_debug_viewer->drawTex(rts[1], viewsize.x * 0.25f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
 	this->m_debug_viewer->drawTex(rts[2], viewsize.x * 0.5f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
 	//this->m_debug_viewer->drawTex(g_tex_id, 500, 500, 400, 400);
+
+	this->m_debug_viewer->drawTex(rt_shadow[0],viewsize.x * 0.75f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
 }
 
 void GameApp::drawGBuffer()
@@ -76,6 +103,24 @@ void GameApp::drawGBuffer()
 		m_gbuffer->shader = m_shaders["gbuffer"].get();
 
 	m_gbuffer->draw([&](Shader* shader){
+		for (auto& render_item : m_gameObjects)
+		{
+			//set basic shader
+			render_item->shader = shader;
+			render_item->render(m_camera.get());
+		}
+	});
+}
+
+void GameApp::drawShadowMap()
+{
+	if(!m_shadow_map)
+		return;
+
+	if (!m_shadow_map->shader)
+		m_shadow_map->shader = m_shaders["shadowmap"].get();
+
+	m_shadow_map->draw(m_camera.get(),[&](Shader* shader){
 		for (auto& render_item : m_gameObjects)
 		{
 			//set basic shader
@@ -108,6 +153,7 @@ void GameApp::resize(int width,int height)
 	m_camera->viewport(0,0,width,height);
 	glViewport(0,0,width,height);
 
+	//事件变动
 	m_gbuffer->render_target->change(width,height);
 }
 void GameApp::inputKeyboard(int keycode, int action)
@@ -141,7 +187,7 @@ void GameApp::loadContent()
 
 	//load shader
 	//-------------shader
-
+	
 		//basic
 	std::unique_ptr<Shader> basic_shader(new Shader);
 	basic_shader->setFromFile(R"(resources\shaders\basic.vs)", 
@@ -154,6 +200,26 @@ void GameApp::loadContent()
 		R"(resources\shaders\gbuffer.fs)");
 	this->m_shaders["gbuffer"] = std::move(gbuffer_shader);
 
+	//lighting
+	std::unique_ptr<Shader> lighting_default_shader(new Shader);
+	lighting_default_shader->setFromFile(R"(resources\shaders\lighting_default.vs)",
+		R"(resources\shaders\lighting_default.fs)");
+	this->m_shaders["lighting_default"] = std::move(lighting_default_shader);
+
+	//fxaa
+	std::unique_ptr<Shader> fxaa_shader(new Shader);
+	fxaa_shader->setFromFile(R"(resources\shaders\fxaa.vs)",
+		R"(resources\shaders\fxaa.fs)");
+	this->m_shaders["fxaa"] = std::move(fxaa_shader);
+
+	//shadowmap
+	std::unique_ptr<Shader> shadowmap_shader(new Shader);
+	shadowmap_shader->setFromFile(R"(resources\shaders\shadowmap.vs)",
+		R"(resources\shaders\shadowmap.fs)");
+	this->m_shaders["shadowmap"] = std::move(shadowmap_shader);
+
+
+	//debug viewer
 	std::unique_ptr<Shader> screenquad_shader(new Shader);
 	screenquad_shader->setFromFile(R"(resources\shaders\screenquad.vs)", 
 		R"(resources\shaders\screenquad.fs)");
@@ -165,16 +231,23 @@ void GameApp::loadContent()
 	m_gbuffer = std::make_unique<GBuffer>();
 	m_gbuffer->build(m_viewport.x,m_viewport.y);
 
+	//shadowmap
+	m_shadow_map = std::make_unique<ShadowMap>();
+	m_shadow_map->shader = m_shaders["shadermap"].get();
 	//textures-----------------
 	//load basictexture
 	auto loader = new TextureLoader();
-	auto tex = loader->load(R"(D:\games\organs_models\beihang\FQJ_DanNang_Gan.png)");
-	m_textures["liver_diffuse"] = std::move(tex);
+	auto liver_model_tex = loader->load(R"(resources\models\liver\FQJ_DanNang_Gan.png)");
+	m_textures["liver_diffuse"] = std::move(liver_model_tex);
 
+	//random texture
+	auto noise_tex = loader->genTex(256,256,3);
+	m_textures["noise_tex"] = std::move(noise_tex);
 	// textures----------------------
 	//load mesh
 	std::unique_ptr<GeometryGenerator> gg(new GeometryGenerator);
-	std::string liver_mesh_path = R"(D:\games\organs_models\beihang\liver.obj)";
+	std::string liver_mesh_path = R"(resources\models\liver\liver.obj)";
+		//R"(resources\models\cube\cube.obj)";
 	GeometryGenerator::MeshData liver_mesh_data;
 	if(gg->loadFromFile(liver_mesh_path,liver_mesh_data))
 	{
@@ -192,7 +265,31 @@ void GameApp::loadContent()
 		m_gameObjects.emplace_back(liver_object);
 
 	};
+	//load ground plane
+	GeometryGenerator::MeshData plane_data;
+	gg->createGrid(100,100,2,2,plane_data);
+	std::shared_ptr<RenderItem> plane_object(new RenderItem());
+	auto plane_mesh = new MeshGeometry();
+	plane_mesh->setBuffer(std::vector<GeometryGenerator::MeshData>{plane_data});
+	
+	plane_mesh->name = "groundplane";
+	plane_object->mesh = plane_mesh;
+	plane_object->transform.position = glm::vec3(0,-9,0);
+	plane_object->transform.update();
+	
+	m_gameObjects.emplace_back(plane_object);
+	
 
+
+	//lighting merge item
+	m_post_composer = std::make_unique<PostComposer>(this);
+	std::unique_ptr<PostPass> lightpass(new PostPass(this->m_shaders["lighting_default"].get()));
+	//m_post_composer->m_passes.emplace_back(lightpass);
+	m_post_composer->add(std::move(lightpass));
+
+	//aa pass
+	std::unique_ptr<PostPass> aapass(new PostPass(this->m_shaders["fxaa"].get()));
+	m_post_composer->add(std::move(aapass));
 
 	m_debug_viewer = std::make_unique<DebugViewer>(this);
 	m_debug_viewer->shader = this->m_shaders["screenquad"].get();

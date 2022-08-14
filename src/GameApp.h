@@ -6,6 +6,8 @@
 #include <camera.h>
 #include <GBuffer.h>
 #include <debugViewer.h>
+#include <PostComposer.h>
+#include <Shadowmap.h>
 
 class GameApp
 {
@@ -23,6 +25,8 @@ public:
 
 	virtual void drawGBuffer();
 
+	virtual void drawShadowMap();
+
 	//!input mouse
 	void inputMouse(int x, int y, int mouse_button, int mouse_press_or_release);
 
@@ -31,9 +35,14 @@ public:
 	//!input keyboard
 	void inputKeyboard(int keycode, int action);
 
-	Camera* getCamera(){ return m_camera.get();}
+	Camera* getCamera(){ return m_camera.get();};
 
 	void resize(int width,int height);
+
+	glm::ivec2 getViewport(){
+		return m_viewport;
+	};
+
 protected:
 	//读取初始的模型数据 纹理数据
 	virtual void loadContent();
@@ -58,6 +67,12 @@ protected:
 
 	//gbuffer
 	std::unique_ptr<GBuffer> m_gbuffer = nullptr;
+
+	//shadowmap
+	std::unique_ptr<ShadowMap> m_shadow_map = nullptr;
+	//后处理
+	std::unique_ptr<PostComposer> m_post_composer = nullptr;
+
 	//debug viewer
 	std::unique_ptr<DebugViewer> m_debug_viewer = nullptr;
 

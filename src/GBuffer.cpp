@@ -8,7 +8,8 @@ GBuffer::~GBuffer()
 
 void GBuffer::build(int width,int height)
 {
-	render_target = new RenderTarget(width,height);
+	//GBUFFER:position normal diffuse
+	render_target = new RenderTarget(width,height,{GL_FLOAT,GL_FLOAT,GL_UNSIGNED_BYTE});
 
 }
 
@@ -39,7 +40,6 @@ void GBuffer::draw(std::function<void(Shader* shader)> callback)
 	}
 
 	begin();
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//set shader first
 	callback(shader);
