@@ -144,7 +144,7 @@ int main()
 
 	//glEnable(GL_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(0,0,0,0);
+	glClearColor(1,1,1,1);
 	float dt;
 	//运行
 	while (!glfwWindowShouldClose(window))

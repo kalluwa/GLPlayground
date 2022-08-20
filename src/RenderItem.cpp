@@ -133,11 +133,13 @@ void RenderItem::render(Camera* camera)
 
 		//uniforms
 		shader->setUniformMf("model",transform.world);
-		shader->setUniformMf("view",camera->getViewMatrix());
-		shader->setUniformMf("proj",camera->getProjectionMatrix());
-		shader->setUniformVf("cam_pos", camera->getPosition());
-		shader->setUniformVf("viewport_size", camera->getScreenSize());
-
+		if(camera)
+		{
+			shader->setUniformMf("view", camera->getViewMatrix());
+			shader->setUniformMf("proj", camera->getProjectionMatrix());
+			shader->setUniformVf("cam_pos", camera->getPosition());
+			shader->setUniformVf("viewport_size", camera->getScreenSize());
+		}
 		//mat
 		shader->setUniformInt("use_tex",tex_diffuse?1:0);
 		shader->setUniformVf("diffuse_color",this->mat->diffuse);

@@ -5,7 +5,6 @@ in vec2 position;
 
 uniform vec4 rect;
 
-
 out vec2 vs_uv;
 void main()
 {

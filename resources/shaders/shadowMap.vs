@@ -6,11 +6,9 @@ layout(location = 2) in vec2 uv;
 
 out vec4 v_position;
 
-uniform mat4 cameraToShadowView;
 uniform mat4 cameraToShadowProjector;
-uniform mat4 model;
 
-//uniform mat4 model;
+uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
 

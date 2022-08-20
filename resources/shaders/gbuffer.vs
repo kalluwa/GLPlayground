@@ -19,7 +19,7 @@ void main()
 	vs_uv = uv;
 	worldnormal = normalize(normal);
 	vec4 view_pos = (view * model * vec4(position, 1));
-	worldpos = position.xyz;
+	worldpos = (model * vec4(position,1.0)).xyz;
 
 	gl_Position = proj * view * model * vec4(position, 1);
 

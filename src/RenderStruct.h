@@ -65,7 +65,7 @@ struct Shader
 		program_id = 0;
 	}
 
-	unsigned int set(std::string vs_str,std::string fs_str)
+	unsigned int set(std::string vs_str,std::string fs_str,std::string gs_str="")
 	{
 		//fmt::print("--vs--\n{}\n----\n",vs_str);
 
@@ -117,6 +117,11 @@ struct Shader
 
 		auto vs = createShader(GL_VERTEX_SHADER, vs_str);
 		auto fs = createShader(GL_FRAGMENT_SHADER, fs_str);
+		unsigned int gs = 0; 
+		if(gs_str.size())
+		{
+			gs = createShader(GL_GEOMETRY_SHADER,gs_str);
+		}
 		if (vs == 0 || fs == 0)
 		{
 			if (vs != 0) { glDeleteShader(vs); }
@@ -135,6 +140,8 @@ struct Shader
 		}
 		glAttachShader(prog, vs);
 		glAttachShader(prog, fs);
+		if(gs)
+			glAttachShader(prog,gs);
 		glLinkProgram(prog);
 
 		GLint infoLength;
@@ -171,6 +178,7 @@ struct Shader
 
 		this->vs_str = vs_str;
 		this->fs_str = fs_str;
+		this->gs_str = gs_str;
 
 		program_id = prog;
 		return prog;
@@ -365,6 +373,7 @@ struct Shader
 	};
 	std::string vs_str;
 	std::string fs_str;
+	std::string gs_str;
 
 	//!set float uniform
 	bool setUniformF(const std::string& paramname, float val)

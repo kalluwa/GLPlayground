@@ -16,12 +16,20 @@ public:
 
 	glm::mat4 getShadowMatrix();
 
+	glm::ivec2 getShadowMapSize()
+	{
+		if(!rt) return glm::ivec2 {512,512};
+
+		return rt->getSize();
+	};
+
 	Shader* shader = nullptr;
 	RenderTarget* rt = nullptr;
 
-	glm::vec3 light_pos = glm::vec3(10,10,10);
+	glm::vec3 light_pos = glm::vec3(5,5,5);
 	
 
 	glm::mat4 camera_mat = glm::mat4(1.0f);
+	
 };
 #endif

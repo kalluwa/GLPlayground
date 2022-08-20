@@ -21,13 +21,14 @@ GameApp::~GameApp()
 
 bool GameApp::init()
 {
-	m_camera = std::make_unique<Camera>(glm::vec3(-10.896174,7.108711,-38.775303),
-		glm::vec3(-0.8545703,-4.8266044,-12.192807),
+	m_camera = std::make_unique<Camera>(
+		glm::vec3(0,4,5),
+		glm::vec3(0,0,0),
 		glm::vec3(0,1,0),
 		45.0f,
 		m_viewport.x/(float)(m_viewport.y),
 		0.1f,
-		5000.0f);
+		1000.0f);
 
 	
 	loadContent();
@@ -48,8 +49,8 @@ void GameApp::draw()
 
 	drawShadowMap();
 
-	glClearColor(0, 0, 0, 0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glClearColor(1,1,1,1);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	
 	//for(auto& render_item : m_gameObjects)
@@ -75,10 +76,15 @@ void GameApp::draw()
 
 		thispass->shader = m_shaders["lighting_default"].get();
 		//set shadow matrix
+		thispass->shader->begin();
+		thispass->shader->setUniformMf("cameraToShadowProjector",m_shadow_map->getShadowMatrix());
+		thispass->shader->end();
+
 		//fxaa pass
 		auto& fxaapass = m_post_composer->m_passes[1];
 		fxaapass->shader->begin();
 		fxaapass->shader->setUniformVf("resolution",1.0f/glm::vec2(getViewport()));
+		fxaapass->shader->end();
 		m_post_composer->draw();
 	}
 
@@ -125,7 +131,7 @@ void GameApp::drawShadowMap()
 		{
 			//set basic shader
 			render_item->shader = shader;
-			render_item->render(m_camera.get());
+			render_item->render(nullptr);
 		}
 	});
 }
@@ -276,8 +282,40 @@ void GameApp::loadContent()
 	plane_object->mesh = plane_mesh;
 	plane_object->transform.position = glm::vec3(0,-9,0);
 	plane_object->transform.update();
-	
+
 	m_gameObjects.emplace_back(plane_object);
+	//cube
+	{
+		GeometryGenerator::MeshData cube_data;
+		gg->createBox(1, 1, 1,cube_data);
+		std::shared_ptr<RenderItem> cube_object(new RenderItem());
+		auto cube_mesh = new MeshGeometry();
+		cube_mesh->setBuffer(std::vector<GeometryGenerator::MeshData>{cube_data});
+
+		cube_mesh->name = "cube";
+		cube_object->mesh = cube_mesh;
+		cube_object->transform.position = glm::vec3(0, -6, 0);
+		cube_object->transform.update();
+		m_gameObjects.emplace_back(cube_object);
+	}
+
+	{
+		//lightbox
+		{
+			GeometryGenerator::MeshData cube_data;
+			gg->createBox(1, 1, 1, cube_data);
+			std::shared_ptr<RenderItem> cube_object(new RenderItem());
+			auto cube_mesh = new MeshGeometry();
+			cube_mesh->setBuffer(std::vector<GeometryGenerator::MeshData>{cube_data});
+
+			cube_mesh->name = "cube";
+			cube_object->mesh = cube_mesh;
+			cube_object->transform.position = m_shadow_map->light_pos;//glm::vec3(-10, 8, 0);
+			cube_object->transform.update();
+			m_gameObjects.emplace_back(cube_object);
+		}
+	}
+	//
 	
 
 

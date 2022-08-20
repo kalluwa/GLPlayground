@@ -24,6 +24,28 @@ uniform vec3 offset_positions[64];
 
 out vec3 color;
 
+vec4 scPostW;
+// From http://fabiensanglard.net/shadowmappingVSM/index.php
+float chebyshevUpperBound(float distance)
+{
+	vec2 moments = texture2D(shadowMap,scPostW.xy).rg;
+	
+	// Surface is fully lit. as the current fragment is before the light occluder
+	if (distance <= moments.x)
+		return 1.0;
+
+	// The fragment is either in shadow or penumbra. We now use chebyshev's upperBound to check
+	// How likely this pixel is to be lit (p_max)
+	float variance = moments.y - (moments.x*moments.x);
+	//variance = max(variance, 0.000002);
+	variance = max(variance, 0.00002);
+
+	float d = distance - moments.x;
+	float p_max = variance / (variance + d*d);
+
+	return p_max;
+}
+
 void main()
 {
     //color = texture(shadowMap,vs_uv).xyz;
@@ -37,6 +59,21 @@ void main()
     vec3 worldnormal = texture(normal_map,vs_uv).xyz;
 
     vec2 p = (2.0*gl_FragCoord.xy-viewport_size.xy)/viewport_size.y;
+
+    //shadow
+    vec4 sc = cameraToShadowProjector * vec4(worldpos,1.0);
+	scPostW = sc / sc.w; 
+	scPostW = scPostW * 0.5 + 0.5;
+
+    //color = vec3(scPostW.xy,0);
+    //color = texture(shadowMap,scPostW.xy).xyz;
+    //return;
+	float shadowFactor = 1.0; // Not in shadow
+    bool outsideShadowMap = sc.w <= 0.0f || (scPostW.x < 0 || scPostW.y < 0) || (scPostW.x >= 1 || scPostW.y >= 1);
+	if (!outsideShadowMap) 
+	{
+		shadowFactor = chebyshevUpperBound(scPostW.z);
+	}
 
     //vec3 col = render( p );
     {
@@ -65,7 +102,7 @@ void main()
     col *= 0.2 + 0.8*pow(16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y),0.2);
 
     vec3 ambient = vec3(0.2f,0.2f,0.2f);
-    color = color * col;
+    color = color * col * shadowFactor;
 
     //gamma fix
     color = pow(color,vec3(1.0/2.2));
