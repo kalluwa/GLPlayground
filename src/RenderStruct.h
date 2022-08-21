@@ -340,12 +340,12 @@ struct Shader
 		return prog;
 	}
 
-	unsigned int setFromFile(std::string vs_path,std::string fs_path)
+	unsigned int setFromFile(std::string vs_path,std::string fs_path,std::string gs_path="")
 	{
 #if 0
 		setBinary(vs_path,fs_path);
 #else
-		fmt::print("compile shader:\n{} \n{}\n", vs_path, fs_path);
+		fmt::print("compile shader:\n{} \n{} \n{}\n", vs_path, fs_path,gs_path);
 		auto getStr = [](std::string filepath)->std::string
 		{
 			std::ifstream ifs;
@@ -367,7 +367,10 @@ struct Shader
 			return ss;
 		};
 
-		set(getStr(vs_path),getStr(fs_path));
+		std::string gs_str = "";
+		if(gs_path.size()>0)
+			gs_str = getStr(gs_path);
+		set(getStr(vs_path),getStr(fs_path),gs_str);
 #endif
 		return program_id;
 	};

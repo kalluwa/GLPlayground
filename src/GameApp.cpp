@@ -62,7 +62,7 @@ void GameApp::draw()
 	// 
 
 	auto& rts = m_gbuffer->render_target->getRenderTarget();
-	auto& rt_shadow = m_shadow_map->rt->getRenderTarget();
+	//auto& rt_shadow = m_shadow_map->rt->getRenderTarget();
 	//post process
 	if(m_post_composer && m_post_composer->m_passes.size())
 	{
@@ -72,7 +72,7 @@ void GameApp::draw()
 		thispass->textures["normal_map"] = rts[1];
 		thispass->textures["diffuse_map"] = rts[2];
 		thispass->textures["noise_map"] = this->m_textures["noise_tex"]->tex_id;
-		thispass->textures["shadowMap"] = rt_shadow[0];
+		//thispass->textures["shadowMap"] = rt_shadow[0];
 
 		thispass->shader = m_shaders["lighting_default"].get();
 		//set shadow matrix
@@ -96,7 +96,7 @@ void GameApp::draw()
 	this->m_debug_viewer->drawTex(rts[2], viewsize.x * 0.5f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
 	//this->m_debug_viewer->drawTex(g_tex_id, 500, 500, 400, 400);
 
-	this->m_debug_viewer->drawTex(rt_shadow[0],viewsize.x * 0.75f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
+	//this->m_debug_viewer->drawTex(rt_shadow[0],viewsize.x * 0.75f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
 }
 
 void GameApp::drawGBuffer()
@@ -238,7 +238,7 @@ void GameApp::loadContent()
 	m_gbuffer->build(m_viewport.x,m_viewport.y);
 
 	//shadowmap
-	m_shadow_map = std::make_unique<ShadowMap>();
+	m_shadow_map = std::make_unique<ShadowMap>(this);
 	m_shadow_map->shader = m_shaders["shadermap"].get();
 	//textures-----------------
 	//load basictexture

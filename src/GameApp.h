@@ -39,6 +39,11 @@ public:
 
 	void resize(int width,int height);
 
+	//getters
+	auto& getShaders(){
+		return m_shaders;
+	};
+
 	glm::ivec2 getViewport(){
 		return m_viewport;
 	};
