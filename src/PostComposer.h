@@ -7,7 +7,7 @@
 #include <glm/gtx/compatibility.hpp>
 #include<fmt/core.h>
 #include "RenderStruct.h"
-#include "camera.h"
+#include "fpscamera/fpscamera.h"
 
 class PostPass
 {
@@ -33,7 +33,7 @@ public:
 		}
 	}
 	
-	virtual void draw(Camera* cam);
+	virtual void draw(FPSCamera* cam);
 
 	Shader* shader = nullptr;
 	std::map<std::string,unsigned int> textures;
@@ -43,7 +43,7 @@ public:
 class LightPass : public PostPass
 {
 public:
-	virtual void draw(Camera* cam) override
+	virtual void draw(FPSCamera* cam) override
 	{
 		PostPass::draw(cam);
 	}

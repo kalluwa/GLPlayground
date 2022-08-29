@@ -5,6 +5,7 @@
 #include "camera.h"
 #include <random>
 #include <glm/gtc/matrix_transform.hpp>
+#include <fpscamera/fpscamera.h>
 
 class GameApp;
 
@@ -15,7 +16,7 @@ public:
 	~ShadowMap();
 
 	void resize(int w,int h);
-	void draw(Camera* cam,std::function<void(Shader*)> draw_func);
+	void draw(FPSCamera* cam,std::function<void(Shader*)> draw_func);
 
 	glm::mat4 getShadowMatrix();
 
@@ -26,7 +27,7 @@ public:
 		return rt->getSize();
 	};
 
-	Shader* shader = nullptr;
+	//Shader* shader = nullptr;
 	RenderTarget* rt = nullptr;
 
 	glm::vec3 light_pos = glm::vec3(5,5,5);
@@ -38,6 +39,7 @@ public:
 	//csm functions
 	void intCSM();
 
+	void drawCSM();
 
 
 
@@ -51,7 +53,7 @@ public:
 	std::vector<float> shadowCascadeLevels{ cameraFarPlane / 50.0f, cameraFarPlane / 25.0f, cameraFarPlane / 10.0f, cameraFarPlane / 2.0f };
 
 
-
+	std::vector<glm::mat4> getLightSpaceMatrices();
 	// lighting info
 	// -------------
 	const glm::vec3 lightDir = glm::normalize(glm::vec3(20.0f, 50, 20.0f));
@@ -59,6 +61,8 @@ public:
 	unsigned int lightDepthMaps;
 	const unsigned int depthMapResolution = 4096;
 
+	//light matrix uniform
+	unsigned int matricesUBO;
 	//Ëæ»úÊý£º·ÅÖÃcube
 	std::random_device device;
 	std::mt19937 generator = std::mt19937(device());

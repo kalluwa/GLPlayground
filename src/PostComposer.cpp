@@ -1,7 +1,7 @@
 #include "PostComposer.h"
 #include "GameApp.h"
 
-void PostPass::draw(Camera* cam)
+void PostPass::draw(FPSCamera* cam)
 {
 	if (!shader)
 	{

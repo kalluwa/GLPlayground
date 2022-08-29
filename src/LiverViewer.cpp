@@ -75,13 +75,14 @@ void calc_FPS(GLFWwindow* window,float& dt)
 
 	++frames;
 }
+#pragma region 输入事件
 
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	game_app->inputMouseScroll(yoffset>0?120:-120);
+	game_app->inputMouseScroll(yoffset > 0 ? 120 : -120);
 };
 
-void mousebutton_callback (GLFWwindow *window, int button, int action, int mods)
+void mousebutton_callback(GLFWwindow* window, int button, int action, int mods)
 {
 	g_button = button;
 	g_button_down = GLFW_PRESS == action;
@@ -92,10 +93,20 @@ void mousebutton_callback (GLFWwindow *window, int button, int action, int mods)
 
 }
 
+
+void keybuton_callback(GLFWwindow* window, int keycode, int scancode, int action, int mods)
+{
+	game_app->inputKeyboard(keycode, action);
+}
+
+
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
-	game_app->resize(width,height);
+	game_app->resize(width, height);
 }
+
+#pragma endregion
+
 int main()
 {
 	GLFWwindow* window = nullptr;
@@ -129,6 +140,7 @@ int main()
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetMouseButtonCallback(window,mousebutton_callback);
 	glfwSetWindowSizeCallback(window, window_size_callback);
+	glfwSetKeyCallback(window,keybuton_callback);
 	//初始化实例
 	game_app = std::make_unique<GameApp>(width,height);
 	TestUnit::runAll();

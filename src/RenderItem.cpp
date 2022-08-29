@@ -109,7 +109,7 @@ void MeshGeometry::setBuffer(const std::vector<GeometryGenerator::MeshData>& mes
 }
 
 
-void RenderItem::render(Camera* camera)
+void RenderItem::render(FPSCamera* camera)
 {
 	if(shader && mesh)
 	{

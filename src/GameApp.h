@@ -8,6 +8,7 @@
 #include <debugViewer.h>
 #include <PostComposer.h>
 #include <Shadowmap.h>
+#include <fpscamera/fpscamera.h>
 
 class GameApp
 {
@@ -35,7 +36,7 @@ public:
 	//!input keyboard
 	void inputKeyboard(int keycode, int action);
 
-	Camera* getCamera(){ return m_camera.get();};
+	FPSCamera* getCamera(){ return m_fpscamera.get();};
 
 	void resize(int width,int height);
 
@@ -67,6 +68,7 @@ protected:
 	glm::ivec2 m_viewport;
 	std::unique_ptr<Camera> m_camera = nullptr;
 
+	std::unique_ptr<FPSCamera> m_fpscamera = nullptr;
 	//ÈýÎ¬¶ÔÏó
 	std::vector<std::shared_ptr<RenderItem>> m_gameObjects;
 

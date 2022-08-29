@@ -30,6 +30,8 @@ bool GameApp::init()
 		0.1f,
 		1000.0f);
 
+	m_fpscamera = std::make_unique<FPSCamera>(glm::vec3(0.0f, 0.0f, 3.0f)
+		);
 	
 	loadContent();
 
@@ -39,6 +41,7 @@ bool GameApp::init()
 void GameApp::update(float delta_time)
 {
 	m_camera->update();
+
 }
 
 void GameApp::draw()
@@ -113,7 +116,7 @@ void GameApp::drawGBuffer()
 		{
 			//set basic shader
 			render_item->shader = shader;
-			render_item->render(m_camera.get());
+			render_item->render(getCamera());
 		}
 	});
 }
@@ -123,10 +126,10 @@ void GameApp::drawShadowMap()
 	if(!m_shadow_map)
 		return;
 
-	if (!m_shadow_map->shader)
-		m_shadow_map->shader = m_shaders["shadowmap"].get();
+	//if (!m_shadow_map->shader)
+	//	m_shadow_map->shader = m_shaders["shadowmap"].get();
 
-	m_shadow_map->draw(m_camera.get(),[&](Shader* shader){
+	m_shadow_map->draw(getCamera(),[&](Shader* shader){
 		for (auto& render_item : m_gameObjects)
 		{
 			//set basic shader
@@ -142,6 +145,8 @@ void GameApp::drawShadowMap()
 void GameApp::inputMouseScroll(int x)
 {
 	m_camera->updateMouseDelta(x);
+
+	m_fpscamera->ProcessMouseScroll(x);
 }
 
 void GameApp::inputMouse(int x, int y, int mouse_button, int mouse_press_or_release)
@@ -151,6 +156,25 @@ void GameApp::inputMouse(int x, int y, int mouse_button, int mouse_press_or_rele
 	//auto pos = m_camera->getPosition();
 	//auto target = m_camera->getTarget();
 	//fmt::print("cam pos:{},{},{}\n cam target:{},{},{}\n",pos.x,pos.y,pos.z,target.x,target.y,target.z);
+
+	static bool firsthit = true;
+	static int lastx = 0;
+	static int lasty = 0;
+	int deltax = 0,deltay = 0;
+	if(firsthit)
+	{
+		lastx = x;
+		lasty = y;
+		firsthit = false;
+	}
+	else
+	{
+		deltax = x - lastx;
+		deltay = lasty - y;
+		lastx = x;
+		lasty = y;
+	}
+	m_fpscamera->ProcessMouseMovement(deltax,deltay);
 }
 
 void GameApp::resize(int width,int height)
@@ -159,6 +183,7 @@ void GameApp::resize(int width,int height)
 	m_camera->viewport(0,0,width,height);
 	glViewport(0,0,width,height);
 
+	m_fpscamera->viewport(0, 0, width, height);
 	//事件变动
 	m_gbuffer->render_target->change(width,height);
 }
@@ -181,6 +206,16 @@ void GameApp::inputKeyboard(int keycode, int action)
 		if (keycode == 'c' || keycode == 'C')
 		{
 		}
+	}
+
+	getCamera()->MovementSpeed = key_shift_ ? 2.5 * 10 : 2.5;
+	const float deltaTime = 0.1f;
+	if(action > 0)
+	{
+		if (keycode == 'W') getCamera()->ProcessKeyboard(FORWARD, deltaTime);
+		if (keycode == 'S') getCamera()->ProcessKeyboard(BACKWARD, deltaTime);
+		if (keycode == 'A') getCamera()->ProcessKeyboard(LEFT, deltaTime);
+		if (keycode == 'D') getCamera()->ProcessKeyboard(RIGHT, deltaTime);
 	}
 }
 #pragma endregion
@@ -239,7 +274,7 @@ void GameApp::loadContent()
 
 	//shadowmap
 	m_shadow_map = std::make_unique<ShadowMap>(this);
-	m_shadow_map->shader = m_shaders["shadermap"].get();
+	//m_shadow_map->shader = m_shaders["shadermap"].get();
 	//textures-----------------
 	//load basictexture
 	auto loader = new TextureLoader();

@@ -11,6 +11,7 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <GeometryGenerator.h>
 #include <camera.h>
+#include <fpscamera/fpscamera.h>
 
 //#pragma pack(push,1)
 struct Vertex
@@ -94,6 +95,6 @@ public:
 	
 	Transform transform;
 
-	void render(Camera* camera);
+	void render(FPSCamera* camera);
 };
 #endif // _RENDER_ITEM_H_

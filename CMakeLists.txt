@@ -17,12 +17,14 @@ file(GLOB src_headers "src/*.h")
 
 #源代码
 file(GLOB src_files "src/*.cpp")
+file(GLOB fpscamera_files "src/fpscamera/*.h")
 file(GLOB soil2 libs/soil2/srcs/*.c)
 file(GLOB fmt_src ${common_dir}/fmt-7.1.3/src/*)
 
 
 set(src_files 
 	${src_files}
+	${fpscamera_files}
 	${common_dir}/glad/src/glad.c
 	${soil2}
 	${fmt_src}
