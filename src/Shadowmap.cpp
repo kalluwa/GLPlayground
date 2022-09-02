@@ -235,8 +235,9 @@ std::vector<glm::mat4> ShadowMap::getLightSpaceMatrices()
 
 #pragma endregion
 
-void ShadowMap::drawCSM()
+void ShadowMap::drawCSM(FPSCamera* cam,std::function<void(Shader* shader)> draw_func)
 {
+	//ÉèÖÃuniform buffer
 	//setup ubo
 	// 0. UBO setup
 	const auto lightMatrices = getLightSpaceMatrices();
@@ -246,4 +247,52 @@ void ShadowMap::drawCSM()
 		glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(glm::mat4x4), sizeof(glm::mat4x4), &lightMatrices[i]);
 	}
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+
+	//»æÖÆdepth
+	{
+		auto simpleDepth = app->getShaders()["ShadowDepth"].get();
+		simpleDepth->begin();
+
+		glBindFramebuffer(GL_FRAMEBUFFER, lightFBO);
+		glViewport(0, 0, depthMapResolution, depthMapResolution);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glCullFace(GL_FRONT);  // peter panning
+		
+		draw_func(simpleDepth);
+
+		glCullFace(GL_BACK);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		simpleDepth->end();
+	}
+
+
+	// 2. render scene as normal using the generated depth/shadow map  
+		// --------------------------------------------------------------
+	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	Shader* shader = app->getShaders()["ShadowMapping"].get();
+
+	shader->begin();
+	const glm::mat4 projection = glm::perspective(glm::radians(cam->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, cameraNearPlane, cameraFarPlane);
+	const glm::mat4 view = cam->getViewMatrix();
+	shader->setUniformMf("projection", projection);
+	shader->setUniformMf("view", view);
+	// set light uniforms
+	shader->setUniformVf("viewPos", cam->Position);
+	shader->setUniformVf("lightDir", lightDir);
+	shader->setUniformF("farPlane", cameraFarPlane);
+	shader->setUniformInt("cascadeCount", shadowCascadeLevels.size());
+	for (size_t i = 0; i < shadowCascadeLevels.size(); ++i)
+	{
+		shader->setUniformF("cascadePlaneDistances[" + std::to_string(i) + "]", shadowCascadeLevels[i]);
+	}
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, lightDepthMaps);
+	draw_func(shader);
+
+	shader->end();
 }

@@ -39,9 +39,9 @@ public:
 	//csm functions
 	void intCSM();
 
-	void drawCSM();
+	void drawCSM(FPSCamera* cam,std::function<void(Shader* shader)> draw_func);
 
-
+	unsigned int getShadowMaps(){ return lightDepthMaps;};
 
 	// settings
 	const unsigned int SCR_WIDTH = 2560;

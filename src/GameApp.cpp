@@ -52,6 +52,7 @@ void GameApp::draw()
 
 	drawShadowMap();
 
+	return;
 	//glClearColor(1,1,1,1);
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -129,12 +130,21 @@ void GameApp::drawShadowMap()
 	//if (!m_shadow_map->shader)
 	//	m_shadow_map->shader = m_shaders["shadowmap"].get();
 
-	m_shadow_map->draw(getCamera(),[&](Shader* shader){
-		for (auto& render_item : m_gameObjects)
+	//m_shadow_map->draw(getCamera(),[&](Shader* shader){
+	//	for (auto& render_item : m_gameObjects)
+	//	{
+	//		//set basic shader
+	//		render_item->shader = shader;
+	//		render_item->render(nullptr);
+	//	}
+	//});
+
+	m_shadow_map->drawCSM(getCamera(), [&](Shader* shader) {
+		for (auto& renderItem : m_gameObjects)
 		{
 			//set basic shader
-			render_item->shader = shader;
-			render_item->render(nullptr);
+			renderItem->shader = shader;
+			renderItem->render(nullptr);
 		}
 	});
 }
@@ -161,6 +171,14 @@ void GameApp::inputMouse(int x, int y, int mouse_button, int mouse_press_or_rele
 	static int lastx = 0;
 	static int lasty = 0;
 	int deltax = 0,deltay = 0;
+
+	if(mouse_button==0 && mouse_press_or_release)
+	{
+		firsthit = true;
+		lastx = 0;
+		lasty = 0;
+	}
+
 	if(firsthit)
 	{
 		lastx = x;

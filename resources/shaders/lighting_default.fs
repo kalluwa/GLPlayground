@@ -102,7 +102,7 @@ void main()
     col *= 0.2 + 0.8*pow(16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y),0.2);
 
     vec3 ambient = vec3(0.2f,0.2f,0.2f);
-    color = color * col * shadowFactor;
+    color = color * col;// * shadowFactor;
 
     //gamma fix
     color = pow(color,vec3(1.0/2.2));
