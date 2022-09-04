@@ -561,6 +561,18 @@ struct Shader
 		cur_tex_loc++;
 	};
 
+	void setTex2dArray(const std::string& paramname, unsigned int tex_id)
+	{
+#ifndef NDEBUG
+		if (!ifUniformExist(paramname))return;
+#endif
+		glActiveTexture(GL_TEXTURE0 + cur_tex_loc);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, tex_id);
+		glUniform1i(glGetUniformLocation(program_id, paramname.c_str()), cur_tex_loc);
+
+		cur_tex_loc++;
+	};
+
 	void setTexCube(const std::string& paramname, unsigned int tex_id)
 	{
 #ifndef NDEBUG
@@ -636,10 +648,11 @@ struct ObjectLight
 class RenderTarget
 {
 public:
-	RenderTarget(int width,int height,const std::vector<unsigned int>& rt_types )
+	RenderTarget(int width,int height,const std::vector<unsigned int>& rt_types,bool linear=false )
 		:m_width(width),m_height(height)
 	{
 		this->m_tex_types = rt_types;
+		this->m_sample_type = linear ? GL_LINEAR : GL_NEAREST;
 		createFBO(m_width,m_height);
 	};
 
@@ -727,12 +740,12 @@ private:
 			GLuint colorbuffer;
 			glGenTextures(1, &colorbuffer);
 			glBindTexture(GL_TEXTURE_2D, colorbuffer);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_sample_type);//GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_sample_type);//GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			if (tex_types[i] == GL_FLOAT)
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, tex_types[i], nullptr);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, tex_types[i], nullptr);
 			else
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, tex_types[i], nullptr);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorbuffer, 0);
@@ -782,6 +795,7 @@ private:
 	unsigned int m_fbo = 0;
 	std::vector<unsigned int> m_tex_types;
 	std::vector<unsigned int> m_tex_ids;
+	unsigned int m_sample_type = GL_NEAREST;
 };
 
 

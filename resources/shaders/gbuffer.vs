@@ -11,14 +11,17 @@ uniform mat4 proj;
 out vec3 worldpos;
 out vec3 worldnormal;
 out vec2 vs_uv;
+out vec3 viewpos;
 
 out float vs_depth;
 
 void main()
 {
 	vs_uv = uv;
-	worldnormal = normalize(normal);
+	mat3 normalMatrix = transpose(inverse(mat3(view * model)));
+	worldnormal = normalMatrix * normal;
 	vec4 view_pos = (view * model * vec4(position, 1));
+	viewpos = view_pos.xyz;
 	worldpos = (model * vec4(position,1.0)).xyz;
 
 	gl_Position = proj * view * model * vec4(position, 1);

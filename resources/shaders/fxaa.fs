@@ -1143,6 +1143,8 @@ varying vec2 vs_uv;
  /*==========================================================================*/
  #endif
  
+ uniform sampler2D aomap;
+
  void main() {
    gl_FragColor = FxaaPixelShader(
      vs_uv,
@@ -1163,6 +1165,10 @@ varying vec2 vs_uv;
      vec4(0.0)
    );
  
+    float ao = texture(aomap,vs_uv).x;
+    gl_FragColor = gl_FragColor * ao;
    // TODO avoid querying texture twice for same texel
    gl_FragColor.a = texture2D(rt_map, vs_uv).a;
+
+
  }

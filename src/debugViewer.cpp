@@ -10,7 +10,7 @@ void DebugViewer::drawTex(unsigned int texid,int x,int y,int width,int height)
 {
 	if(!shader)
 	{
-		fmt::print("DebugViewer shader not ready");
+		fmt::print("DebugViewer shader not ready\n");
 
 		return;
 	}

@@ -3,6 +3,7 @@
 in vec3 worldpos;
 in vec3 worldnormal;
 in vec2 vs_uv;
+in vec3 viewpos;
 in float vs_depth;
 
 uniform vec3 cam_pos;
@@ -19,8 +20,8 @@ layout(location = 2) out vec3 out_diffuse_color;
 void main()
 {
     
-    out_world_pos = worldpos;
-    out_world_normal.xyz = worldnormal;
+    out_world_pos = viewpos;//worldpos;
+    out_world_normal.xyz = normalize(worldnormal);
     out_world_normal.w = vs_depth;
 
     if(use_tex)

@@ -17,6 +17,9 @@ ShadowMap::~ShadowMap()
 void ShadowMap::resize(int w,int h)
 {
 	//rt->change(w,h);
+
+	SCR_WIDTH = w;
+	SCR_HEIGHT = h;
 }
 
 glm::mat4 ShadowMap::getShadowMatrix()
@@ -272,27 +275,27 @@ void ShadowMap::drawCSM(FPSCamera* cam,std::function<void(Shader* shader)> draw_
 		// --------------------------------------------------------------
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	Shader* shader = app->getShaders()["ShadowMapping"].get();
+	//Shader* shader = app->getShaders()["ShadowMapping"].get();
 
-	shader->begin();
-	const glm::mat4 projection = glm::perspective(glm::radians(cam->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, cameraNearPlane, cameraFarPlane);
-	const glm::mat4 view = cam->getViewMatrix();
-	shader->setUniformMf("projection", projection);
-	shader->setUniformMf("view", view);
-	// set light uniforms
-	shader->setUniformVf("viewPos", cam->Position);
-	shader->setUniformVf("lightDir", lightDir);
-	shader->setUniformF("farPlane", cameraFarPlane);
-	shader->setUniformInt("cascadeCount", shadowCascadeLevels.size());
-	for (size_t i = 0; i < shadowCascadeLevels.size(); ++i)
-	{
-		shader->setUniformF("cascadePlaneDistances[" + std::to_string(i) + "]", shadowCascadeLevels[i]);
-	}
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, lightDepthMaps);
-	draw_func(shader);
+	//shader->begin();
+	//const glm::mat4 projection = cam->getProjectionMatrix();//glm::perspective(glm::radians(cam->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, cameraNearPlane, cameraFarPlane);
+	//const glm::mat4 view = cam->getViewMatrix();
+	//shader->setUniformMf("projection", projection);
+	//shader->setUniformMf("view", view);
+	//// set light uniforms
+	//shader->setUniformVf("viewPos", cam->Position);
+	//shader->setUniformVf("lightDir", lightDir);
+	//shader->setUniformF("farPlane", cameraFarPlane);
+	//shader->setUniformInt("cascadeCount", shadowCascadeLevels.size());
+	//for (size_t i = 0; i < shadowCascadeLevels.size(); ++i)
+	//{
+	//	shader->setUniformF("cascadePlaneDistances[" + std::to_string(i) + "]", shadowCascadeLevels[i]);
+	//}
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, 0);
+	//glActiveTexture(GL_TEXTURE1);
+	//glBindTexture(GL_TEXTURE_2D_ARRAY, lightDepthMaps);
+	//draw_func(shader);
 
-	shader->end();
+	//shader->end();
 }

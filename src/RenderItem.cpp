@@ -41,7 +41,7 @@ void Transform::update()
 RenderItem::RenderItem()
 {
 	mat = new Material();
-	mat->diffuse = glm::vec3(1,1,1);
+	mat->diffuse = glm::vec3(0.5,0.5,0.3);
 	mat->specular = glm::vec3(1,1,1);
 }
 

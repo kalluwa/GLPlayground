@@ -43,9 +43,10 @@ public:
 
 	unsigned int getShadowMaps(){ return lightDepthMaps;};
 
+
 	// settings
-	const unsigned int SCR_WIDTH = 2560;
-	const unsigned int SCR_HEIGHT = 1440;
+	unsigned int SCR_WIDTH = 800;//2560;
+	unsigned int SCR_HEIGHT = 600;//1440;
 
 	const float cameraNearPlane = 0.1f;
 	const float cameraFarPlane = 500.0f;

@@ -83,4 +83,7 @@ protected:
 	//debug viewer
 	std::unique_ptr<DebugViewer> m_debug_viewer = nullptr;
 
+	//debug
+	AOPass* aopass = nullptr;
+
 };

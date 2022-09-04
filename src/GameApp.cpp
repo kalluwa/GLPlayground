@@ -52,7 +52,6 @@ void GameApp::draw()
 
 	drawShadowMap();
 
-	return;
 	//glClearColor(1,1,1,1);
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -64,40 +63,63 @@ void GameApp::draw()
 	//	render_item->render(m_camera.get());
 	//}
 	// 
-
+	auto shadowmap_tex = m_shadow_map->getShadowMaps();
 	auto& rts = m_gbuffer->render_target->getRenderTarget();
 	//auto& rt_shadow = m_shadow_map->rt->getRenderTarget();
 	//post process
 	if(m_post_composer && m_post_composer->m_passes.size())
 	{
+		//apply gbuffer to all pass
+		m_post_composer->setGBuffer(rts[0],rts[1],rts[2]);
+
 		//set first pass
 		auto& thispass = m_post_composer->m_passes[0];
-		thispass->textures["position_map"] = rts[0];
-		thispass->textures["normal_map"] = rts[1];
-		thispass->textures["diffuse_map"] = rts[2];
-		thispass->textures["noise_map"] = this->m_textures["noise_tex"]->tex_id;
-		//thispass->textures["shadowMap"] = rt_shadow[0];
+		thispass->textures["position_map"] = TextureUint(rts[0]);
+		thispass->textures["normal_map"] = TextureUint(rts[1]);
+		thispass->textures["diffuse_map"] = TextureUint(rts[2]);
+		thispass->textures["noise_map"] = TextureUint(this->m_textures["noise_tex"]->tex_id);
+		thispass->textures["shadowMap"] = TextureUint(shadowmap_tex,GL_TEXTURE_2D_ARRAY);
 
 		thispass->shader = m_shaders["lighting_default"].get();
 		//set shadow matrix
 		thispass->shader->begin();
 		thispass->shader->setUniformMf("cameraToShadowProjector",m_shadow_map->getShadowMatrix());
+		
+		//csm
+		const glm::mat4 projection = m_fpscamera->getProjectionMatrix();//glm::perspective(glm::radians(cam->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, cameraNearPlane, cameraFarPlane);
+		const glm::mat4 view = m_fpscamera->getViewMatrix();
+		thispass->shader->setUniformMf("projection", projection);
+		thispass->shader->setUniformMf("view", view);
+		// set light uniforms
+		thispass->shader->setUniformVf("viewPos", m_fpscamera->Position);
+		thispass->shader->setUniformVf("lightDir", m_shadow_map->lightDir);
+		thispass->shader->setUniformF("farPlane", m_shadow_map->cameraFarPlane);
+		thispass->shader->setUniformInt("cascadeCount", m_shadow_map->shadowCascadeLevels.size());
+		for (size_t i = 0; i < m_shadow_map->shadowCascadeLevels.size(); ++i)
+		{
+			thispass->shader->setUniformF("cascadePlaneDistances[" + std::to_string(i) + "]", m_shadow_map->shadowCascadeLevels[i]);
+		}
+
 		thispass->shader->end();
 
-		//fxaa pass
-		auto& fxaapass = m_post_composer->m_passes[1];
-		fxaapass->shader->begin();
-		fxaapass->shader->setUniformVf("resolution",1.0f/glm::vec2(getViewport()));
-		fxaapass->shader->end();
 		m_post_composer->draw();
 	}
 
+	//buffer debug
+	/*if(aopass)
+	{
+		aopass->pos_map = rts[0];
+		aopass->normal_map = rts[1];
+		aopass->color_map = rts[2];
+
+		aopass->draw(getCamera());
+	}*/
 
 	//draw debugviewer
-	auto viewsize = getCamera()->getScreenSize();
-	this->m_debug_viewer->drawTex(rts[0], 0, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
-	this->m_debug_viewer->drawTex(rts[1], viewsize.x * 0.25f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
-	this->m_debug_viewer->drawTex(rts[2], viewsize.x * 0.5f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
+	//auto viewsize = getCamera()->getScreenSize();
+	//this->m_debug_viewer->drawTex(rts[0], 0, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
+	//this->m_debug_viewer->drawTex(rts[1], viewsize.x * 0.25f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
+	//this->m_debug_viewer->drawTex(rts[2], viewsize.x * 0.5f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
 	//this->m_debug_viewer->drawTex(g_tex_id, 500, 500, 400, 400);
 
 	//this->m_debug_viewer->drawTex(rt_shadow[0],viewsize.x * 0.75f, viewsize.y * 0.75f, viewsize.x * 0.25f, viewsize.y * 0.25f);
@@ -277,7 +299,6 @@ void GameApp::loadContent()
 		R"(resources\shaders\shadowmap.fs)");
 	this->m_shaders["shadowmap"] = std::move(shadowmap_shader);
 
-
 	//debug viewer
 	std::unique_ptr<Shader> screenquad_shader(new Shader);
 	screenquad_shader->setFromFile(R"(resources\shaders\screenquad.vs)", 
@@ -293,6 +314,10 @@ void GameApp::loadContent()
 	//shadowmap
 	m_shadow_map = std::make_unique<ShadowMap>(this);
 	//m_shadow_map->shader = m_shaders["shadermap"].get();
+	// 
+	//ssao
+	
+
 	//textures-----------------
 	//load basictexture
 	auto loader = new TextureLoader();
@@ -339,17 +364,22 @@ void GameApp::loadContent()
 	m_gameObjects.emplace_back(plane_object);
 	//cube
 	{
-		GeometryGenerator::MeshData cube_data;
-		gg->createBox(1, 1, 1,cube_data);
-		std::shared_ptr<RenderItem> cube_object(new RenderItem());
-		auto cube_mesh = new MeshGeometry();
-		cube_mesh->setBuffer(std::vector<GeometryGenerator::MeshData>{cube_data});
+		GeometryGenerator::MeshData crawl_mesh_data;
+		if (gg->loadFromFile(R"(resources\models\cube\crawl.obj)", crawl_mesh_data))
+		{
+			std::shared_ptr<RenderItem> cube_object(new RenderItem());
+			auto cube_mesh = new MeshGeometry();
+			cube_mesh->setBuffer(std::vector<GeometryGenerator::MeshData>{crawl_mesh_data});
 
-		cube_mesh->name = "cube";
-		cube_object->mesh = cube_mesh;
-		cube_object->transform.position = glm::vec3(0, -6, 0);
-		cube_object->transform.update();
-		m_gameObjects.emplace_back(cube_object);
+			cube_mesh->name = "crawl";
+			cube_object->mesh = cube_mesh;
+			cube_object->transform.position = glm::vec3(0, -6, 0);
+			cube_object->transform.update();
+
+			cube_object->mat->diffuse = glm::vec3(1.0,0.9,0.1);
+			m_gameObjects.emplace_back(cube_object);
+		}
+		
 	}
 
 	{
@@ -378,10 +408,16 @@ void GameApp::loadContent()
 	//m_post_composer->m_passes.emplace_back(lightpass);
 	m_post_composer->add(std::move(lightpass));
 
+	//ssao pass
+	std::unique_ptr<AOPass> aopass(new AOPass(this));
+	m_post_composer->add(std::move(aopass));
+	//aopass = new AOPass(this);
+
 	//aa pass
-	std::unique_ptr<PostPass> aapass(new PostPass(this->m_shaders["fxaa"].get()));
+	std::unique_ptr<PostPass> aapass(new FXAAPass(this->m_shaders["fxaa"].get()));
 	m_post_composer->add(std::move(aapass));
 
+	
 	m_debug_viewer = std::make_unique<DebugViewer>(this);
 	m_debug_viewer->shader = this->m_shaders["screenquad"].get();
 
