@@ -75,7 +75,7 @@ public:
         auto size = getScreenSize();
 
         //same to SHADOWMAP : camNearPlane camFarPlane
-        return glm::perspective(45.0f, size.x/size.y, 0.1f,500.0f);
+        return glm::perspective(glm::radians(this->Zoom), size.x/size.y, 0.1f,500.0f);
     };
 	const glm::vec3& getPosition()
     {

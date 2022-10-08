@@ -160,8 +160,11 @@ glm::mat4 getLightSpaceMatrix(FPSCamera* camera,const float nearPlane, const flo
 	auto size = camera->getScreenSize();
 
 	const auto proj = glm::perspective(
-		glm::radians(camera->Zoom), (float)size.x / (float)size.y, nearPlane,
+		glm::radians(camera->Zoom),
+		(float)size.x / (float)size.y,
+		nearPlane,
 		farPlane);
+	//camera->getProjectionMatrix();
 	const auto corners = getFrustumCornersWorldSpace(proj, camera->getViewMatrix());
 
 	glm::vec3 center = glm::vec3(0, 0, 0);
